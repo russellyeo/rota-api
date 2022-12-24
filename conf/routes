@@ -8,3 +8,7 @@ GET     /                           controllers.Application.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+# Application
+GET     /rotas                      controllers.Application.list()
+GET     /rotas/:id                  controllers.Application.rota(id: Int)

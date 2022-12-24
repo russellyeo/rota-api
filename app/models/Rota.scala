@@ -8,8 +8,13 @@ case class Rota(
 )
 
 object Rota { 
-    import play.api.libs.json.{Json, OFormat}
-    implicit val format: OFormat[Rota] = Json.format[Rota]
+    import play.api.libs.json.{Json, Writes}
+    
+    implicit val writes = new Writes[Rota] {
+        def writes(rota: Rota) = Json.obj(
+            "name" -> rota.name,
+            "description" -> rota.description
+        )
+    }
 }
 
-case class RotaUser(rotaID: Int, userID: Int)

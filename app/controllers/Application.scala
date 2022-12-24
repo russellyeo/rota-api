@@ -6,7 +6,7 @@ import play.api.mvc._
 import play.api.libs.json._
 
 import scala.concurrent.{ ExecutionContext, Future }
-import models.{ Rota, User }
+import models.{ Rota, User, RotaWithUsers }
 import repositories.{ RotasRepository, UsersRepository, RotaUsersRepository }
 
 /**
@@ -31,5 +31,38 @@ class Application @Inject() (
   def index() = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.index())
   }
+
+  /**
+    * Handles request for getting all rotas from the database
+    */
+  def list: Action[AnyContent] =
+    Action.async {
+      rotasRepository.list().map { result =>
+        Ok(Json.toJson(result))
+      }
+    }
+
+  /**
+    * Handles request for getting a rota and related users from the database
+    */
+  def rota(id: Int): Action[AnyContent] =
+    Action.async {
+      rotasRepository.get(id).flatMap { rota => 
+        rota match {
+          case Some(rota) =>
+             for {
+              rotaUsers <- rotaUsersRepository.getRotaUsersWithRotaID(id)
+              users <- usersRepository.getList(rotaUsers.map(_.userID))
+              assigned <- rota.assigned.map(usersRepository.get).getOrElse(Future.successful(None))
+            } yield {
+              Ok(Json.toJson(RotaWithUsers(rota, assigned, users)))
+            }
+          case None =>
+            val error = Json.obj("message" -> s"Rota with id $id not found")
+            Future.successful(NotFound(error))
+        }
+      }
+    }
+ 
 
 }
