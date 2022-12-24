@@ -9,7 +9,7 @@ import play.api.test.Helpers._
 import play.api.libs.json._
 
 import models.{Rota, User, RotaUser}
-import repositories.{ RotasRepository, UsersRepository, RotaUsersRepository }
+import repositories.{RotasRepository, UsersRepository, RotaUsersRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -24,7 +24,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include("Welcome to Play")
     }
 
     "render the index page from the application" in {
@@ -33,7 +33,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include("Welcome to Play")
     }
 
     "render the index page from the router" in {
@@ -42,18 +42,18 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include("Welcome to Play")
     }
 
     "get a rota with users and an assigned user" in new WithSUT() {
       // GIVEN
       val rota = Rota("Retrospective", None, Some(1))
-      
-      val user1 = User("Sofia", 1) 
+
+      val user1 = User("Sofia", 1)
       val user2 = User("Emma", 2)
       val user3 = User("Aiden", 3)
       val users = Seq(user1, user2, user3)
-      
+
       val rotaUsers = Seq(
         RotaUser(1, 1),
         RotaUser(1, 2),
@@ -61,14 +61,17 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       )
 
       when(mockRotasRepository.get(1)).thenReturn(Future.successful(Some(rota)))
-      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1)).thenReturn(Future.successful(rotaUsers))
-      when(mockUsersRepository.get(1)).thenReturn(Future.successful(Some(user1)))
-      when(mockUsersRepository.getList(Seq(1, 2, 3))).thenReturn(Future.successful(users))
-      
+      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1))
+        .thenReturn(Future.successful(rotaUsers))
+      when(mockUsersRepository.get(1))
+        .thenReturn(Future.successful(Some(user1)))
+      when(mockUsersRepository.getList(Seq(1, 2, 3)))
+        .thenReturn(Future.successful(users))
+
       // WHEN
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
-      
-      // THEN      
+
+      // THEN
       status(result) mustBe OK
       contentType(result) mustBe Some("application/json")
       contentAsJson(result) mustBe Json.parse("""
@@ -85,13 +88,14 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
     "get a rota with users and no assigned user" in new WithSUT() {
       // GIVEN
-      val rota = Rota("Sprint Planning", Some("Assign tickets to the next Sprint"), None)
-      
-      val user1 = User("Yara", 1) 
+      val rota =
+        Rota("Sprint Planning", Some("Assign tickets to the next Sprint"), None)
+
+      val user1 = User("Yara", 1)
       val user2 = User("Ravi", 2)
       val user3 = User("Isabella", 3)
       val users = Seq(user1, user2, user3)
-      
+
       val rotaUsers = Seq(
         RotaUser(1, 1),
         RotaUser(1, 2),
@@ -99,13 +103,15 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       )
 
       when(mockRotasRepository.get(1)).thenReturn(Future.successful(Some(rota)))
-      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1)).thenReturn(Future.successful(rotaUsers))
-      when(mockUsersRepository.getList(Seq(1, 2, 3))).thenReturn(Future.successful(users))
-      
+      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1))
+        .thenReturn(Future.successful(rotaUsers))
+      when(mockUsersRepository.getList(Seq(1, 2, 3)))
+        .thenReturn(Future.successful(users))
+
       // WHEN
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
-      
-      // THEN      
+
+      // THEN
       status(result) mustBe OK
       contentType(result) mustBe Some("application/json")
       contentAsJson(result) mustBe Json.parse("""
@@ -123,11 +129,11 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     "get a rota with id that does not exist" in new WithSUT() {
       // GIVEN
       when(mockRotasRepository.get(1)).thenReturn(Future.successful(None))
-      
+
       // WHEN
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
-      
-      // THEN      
+
+      // THEN
       status(result) mustBe NOT_FOUND
       contentAsJson(result) mustBe Json.parse("""
       {
@@ -145,5 +151,10 @@ trait WithSUT extends WithApplication with MockitoSugar {
   val mockUsersRepository = mock[UsersRepository]
   val mockRotaUsersRepository = mock[RotaUsersRepository]
   val controllerComponents = stubControllerComponents()
-  val application = new Application(mockRotasRepository, mockUsersRepository, mockRotaUsersRepository, controllerComponents)
+  val application = new Application(
+    mockRotasRepository,
+    mockUsersRepository,
+    mockRotaUsersRepository,
+    controllerComponents
+  )
 }
