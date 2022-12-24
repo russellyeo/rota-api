@@ -19,32 +19,6 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   "Application GET" should {
 
-    "render the index page from a new instance of controller" in new WithSUT() {
-      val home = application.index().apply(FakeRequest(GET, "/"))
-
-      status(home) mustBe OK
-      contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include("Welcome to Play")
-    }
-
-    "render the index page from the application" in {
-      val application = inject[Application]
-      val home = application.index().apply(FakeRequest(GET, "/"))
-
-      status(home) mustBe OK
-      contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include("Welcome to Play")
-    }
-
-    "render the index page from the router" in {
-      val request = FakeRequest(GET, "/")
-      val home = route(app, request).get
-
-      status(home) mustBe OK
-      contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include("Welcome to Play")
-    }
-
     "get a rota with users and an assigned user" in new WithSUT() {
       // GIVEN
       val rota = Rota("Retrospective", None, Some(1))
