@@ -17,7 +17,7 @@ class RotasRepositorySpec extends PlaySpec with GuiceOneAppPerTest {
 
     "retrieve a rota" in new WithRotasRepository() {
       val rota = await(rotasRepository.get(1)).get
-      rota.id mustBe 1
+      rota.id mustBe Some(1)
       rota.name mustBe "Daily Standup"
       rota.description mustBe Some("Share updates and kick off the day")
       rota.assigned mustBe Some(8)
@@ -26,7 +26,7 @@ class RotasRepositorySpec extends PlaySpec with GuiceOneAppPerTest {
     "insert a new rota" in new WithRotasRepository() {
       val rota = Rota("Coffee", Some("Whose turn it is to make coffee"), None)
       val inserted = await(rotasRepository.insert(rota))
-      inserted.id mustBe 3
+      inserted.id mustBe Some(3)
       inserted.name mustBe "Coffee"
       inserted.description mustBe Some("Whose turn it is to make coffee")
       inserted.assigned mustBe None

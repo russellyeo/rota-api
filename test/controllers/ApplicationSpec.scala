@@ -116,6 +116,73 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       """)
     }
 
+    "create a rota with a description" in new WithSUT() {
+      // GIVEN a rota with a description
+      val rota = Rota("Sprint Planning", Some("Assign tickets"))
+      val inserted = rota.copy(id = Some(1))
+
+      when(mockRotasRepository.insert(rota))
+        .thenReturn(Future.successful(inserted))
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(Json.toJson(rota))
+      val result = application.createRota().apply(request)
+
+      // THEN the rota is created
+      status(result) mustBe CREATED
+      contentAsJson(result) mustBe Json.toJson(inserted)
+    }
+
+    "create a rota without a description" in new WithSUT() {
+      // GIVEN a rota without a description
+      val rota = Rota("Retrospective")
+      val inserted = rota.copy(id = Some(1))
+
+      when(mockRotasRepository.insert(rota))
+        .thenReturn(Future.successful(inserted))
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(Json.toJson(rota))
+      val result = application.createRota().apply(request)
+
+      // THEN the rota is created
+      status(result) mustBe CREATED
+      contentAsJson(result) mustBe Json.toJson(inserted)
+    }
+
+    "create a rota with a bad request" in new WithSUT() {
+      // GIVEN a rota without a description
+      val rota = Json.obj(
+        "title" -> "Retrospective",
+        "desc" -> "Review the sprint"
+      )
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(rota)
+      val result = application.createRota().apply(request)
+
+      // THEN an 'Invalid request' error is returned
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "Invalid request"
+      )
+    }
+
+    "create a rota with a name that is too short" in new WithSUT() {
+      // GIVEN a rota without a description
+      val rota = Json.obj("name" -> "wa")
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(rota)
+      val result = application.createRota().apply(request)
+
+      // THEN an 'Invalid request' error is returned
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "Invalid request"
+      )
+    }
+
   }
 
 }

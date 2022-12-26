@@ -5,3 +5,4 @@
 
 GET     /rotas                      controllers.Application.list()
 GET     /rotas/:id                  controllers.Application.rota(id: Int)
+POST    /rotas                      controllers.Application.createRota()

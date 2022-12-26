@@ -46,7 +46,7 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
     */
   lazy protected val rotasReturningRow = rotas returning rotas.map(_.id) into {
     (rota, id) =>
-      rota.copy(id = id)
+      rota.copy(id = Some(id))
   }
 
   /** Definition of the ROTAS table */
@@ -59,7 +59,7 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
       name,
       description,
       assigned,
-      id
+      id.?
     ) <> ((Rota.apply _).tupled, Rota.unapply _)
   }
 }

@@ -21,7 +21,7 @@ class Application @Inject() (
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc) {
 
-  /** Handles request for getting all rotas from the database
+  /** Handles request for getting all rotas
     */
   def list: Action[AnyContent] =
     Action.async {
@@ -30,7 +30,7 @@ class Application @Inject() (
       }
     }
 
-  /** Handles request for getting a rota and related users from the database
+  /** Handles request for getting a rota and related users
     */
   def rota(id: Int): Action[AnyContent] =
     Action.async {
@@ -51,6 +51,25 @@ class Application @Inject() (
             Future.successful(NotFound(error))
         }
       }
+    }
+
+  /** Handles request for creating a new rota
+    */
+  def createRota(): Action[JsValue] =
+    Action.async(parse.json) { request =>
+      request.body
+        .validate[Rota]
+        .fold(
+          errors => {
+            val error = Json.obj("message" -> "Invalid request")
+            Future.successful(BadRequest(error))
+          },
+          rota => {
+            rotasRepository.insert(rota).map { result =>
+              Created(Json.toJson(result))
+            }
+          }
+        )
     }
 
 }
