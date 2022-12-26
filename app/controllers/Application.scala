@@ -4,6 +4,7 @@ import javax.inject._
 import play.api._
 import play.api.mvc._
 import play.api.libs.json._
+import play.api.i18n._
 
 import scala.concurrent.{ExecutionContext, Future}
 import models.{Rota, User, RotaWithUsers}
@@ -17,9 +18,12 @@ class Application @Inject() (
     rotasRepository: RotasRepository,
     usersRepository: UsersRepository,
     rotaUsersRepository: RotaUsersRepository,
+    messagesApi: MessagesApi,
     cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc) {
+
+  implicit val lang: Lang = Lang("en")
 
   /** Handles request for getting all rotas
     */
@@ -61,8 +65,12 @@ class Application @Inject() (
         .validate[Rota]
         .fold(
           errors => {
-            val error = Json.obj("message" -> "Invalid request")
-            Future.successful(BadRequest(error))
+            // Handle only the first validation error of the first field with validation errors
+            val error = errors.head._2.head
+            val response = Json.obj(
+              "message" -> messagesApi(error.message, error.args: _*)
+            )
+            Future.successful(BadRequest(response))
           },
           rota => {
             rotasRepository.insert(rota).map { result =>

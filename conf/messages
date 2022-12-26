@@ -1,1 +1,4 @@
 # https://www.playframework.com/documentation/latest/ScalaI18N
+
+error.empty=Bad Request: Parameter "{0}" cannot be empty.
+error.minLength=Bad Request: Invalid value for parameter "{0}". Expected a name with a minimum length of {1} characters.

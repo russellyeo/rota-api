@@ -1,8 +1,11 @@
 package controllers
 
+import org.scalatest._
+import org.scalatestplus.mockito._
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
-import org.scalatestplus.mockito._
+import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 
 import play.api.test._
 import play.api.test.Helpers._
@@ -13,11 +16,10 @@ import repositories.{RotasRepository, UsersRepository, RotaUsersRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import org.mockito.Mockito.when
 
 class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
-  "Application GET" should {
+  "GET /rota/{id}" should {
 
     "get a rota with users and an assigned user" in new WithSUT() {
       // GIVEN
@@ -100,7 +102,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       """)
     }
 
-    "get a rota with id that does not exist" in new WithSUT() {
+    "not get a rota with id that does not exist" in new WithSUT() {
       // GIVEN
       when(mockRotasRepository.get(1)).thenReturn(Future.successful(None))
 
@@ -115,6 +117,10 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       }
       """)
     }
+
+  }
+
+  "POST /rotas" should {
 
     "create a rota with a description" in new WithSUT() {
       // GIVEN a rota with a description
@@ -131,6 +137,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       // THEN the rota is created
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.toJson(inserted)
+      verify(mockRotasRepository).insert(rota)
     }
 
     "create a rota without a description" in new WithSUT() {
@@ -148,9 +155,10 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       // THEN the rota is created
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.toJson(inserted)
+      verify(mockRotasRepository).insert(rota)
     }
 
-    "create a rota with a bad request" in new WithSUT() {
+    "not create a rota with a missing name parameter" in new WithSUT() {
       // GIVEN a rota without a description
       val rota = Json.obj(
         "title" -> "Retrospective",
@@ -161,26 +169,67 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
-      // THEN an 'Invalid request' error is returned
+      // THEN an "error.path.missing" error is returned
       status(result) mustBe BAD_REQUEST
       contentAsJson(result) mustBe Json.obj(
-        "message" -> "Invalid request"
+        "message" -> "error.path.missing"
       )
+      // AND the rota is not created
+      verify(mockRotasRepository, times(0)).insert(any[Rota])
     }
 
-    "create a rota with a name that is too short" in new WithSUT() {
-      // GIVEN a rota without a description
+    "not create a rota with a name that is less than three characters" in new WithSUT() {
+      // GIVEN a rota with a name less than three characters
       val rota = Json.obj("name" -> "wa")
 
       // WHEN the request is received
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
-      // THEN an 'Invalid request' error is returned
+      // THEN an "error.minLength" error is returned
       status(result) mustBe BAD_REQUEST
       contentAsJson(result) mustBe Json.obj(
-        "message" -> "Invalid request"
+        "message" -> "error.minLength"
       )
+      // AND the rota is not created
+      verify(mockRotasRepository, times(0)).insert(any[Rota])
+    }
+
+    "not create a rota with a name that is an empty string" in new WithSUT() {
+      // GIVEN a rota with a name that is an empty string
+      val rota = Json.obj("name" -> "")
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(rota)
+      val result = application.createRota().apply(request)
+
+      // THEN an "error.empty" error is returned
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "error.empty"
+      )
+      // AND the rota is not created
+      verify(mockRotasRepository, times(0)).insert(any[Rota])
+    }
+
+    "not create a rota with a description that is an empty string" in new WithSUT() {
+      // GIVEN a rota with a description that is an empty string
+      val rota = Json.obj(
+        "name" -> "Standup",
+        "description" -> ""
+      )
+
+      // WHEN the request is received
+      val request = FakeRequest(POST, "/rotas").withBody(rota)
+      val result = application.createRota().apply(request)
+
+      // THEN an "error.empty" error is returned
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "error.empty"
+      )
+      // AND the rota is not created
+      verify(mockRotasRepository, times(0)).insert(any[Rota])
     }
 
   }
@@ -191,11 +240,14 @@ trait WithSUT extends WithApplication with MockitoSugar {
   val mockRotasRepository = mock[RotasRepository]
   val mockUsersRepository = mock[UsersRepository]
   val mockRotaUsersRepository = mock[RotaUsersRepository]
+  val messagesApi = stubMessagesApi()
   val controllerComponents = stubControllerComponents()
+
   val application = new Application(
     mockRotasRepository,
     mockUsersRepository,
     mockRotaUsersRepository,
+    messagesApi,
     controllerComponents
   )
 }
