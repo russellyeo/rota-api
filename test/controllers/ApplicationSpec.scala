@@ -111,11 +111,9 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
       // THEN
       status(result) mustBe NOT_FOUND
-      contentAsJson(result) mustBe Json.parse("""
-      {
-        "message": "Rota with id 1 not found"
-      }
-      """)
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "error.resourceNotFound"
+      )
     }
 
   }

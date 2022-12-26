@@ -51,7 +51,10 @@ class Application @Inject() (
               Ok(Json.toJson(RotaWithUsers(rota, assigned, users)))
             }
           case None =>
-            val error = Json.obj("message" -> s"Rota with id $id not found")
+            val error =
+              Json.obj(
+                "message" -> messagesApi("error.resourceNotFound", "Rota", id)
+              )
             Future.successful(NotFound(error))
         }
       }
