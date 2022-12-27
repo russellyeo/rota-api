@@ -7,17 +7,13 @@ import play.api.libs.json._
 import play.api.i18n._
 
 import scala.concurrent.{ExecutionContext, Future}
-import models.{Rota, User, RotaWithUsers}
-import repositories.{RotasRepository, UsersRepository, RotaUsersRepository}
+import models._
+import services._
 
-/** This controller creates an `Action` to handle HTTP requests to the
-  * application's home page.
-  */
+/** The main Application controller */
 @Singleton
 class Application @Inject() (
-    rotasRepository: RotasRepository,
-    usersRepository: UsersRepository,
-    rotaUsersRepository: RotaUsersRepository,
+    rotasService: RotasService,
     messagesApi: MessagesApi,
     cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -25,42 +21,34 @@ class Application @Inject() (
 
   implicit val lang: Lang = Lang("en")
 
-  /** Handles request for getting all rotas
+  /** Handles request for retrieving all Rotas
     */
   def list: Action[AnyContent] =
     Action.async {
-      rotasRepository.list().map { result =>
+      rotasService.list().map { result =>
         Ok(Json.toJson(result))
       }
     }
 
-  /** Handles request for getting a rota and related users
+  /** Handles request to retrieve a Rota with its assigned user and all
+    * unassigned users
     */
   def rota(id: Int): Action[AnyContent] =
     Action.async {
-      rotasRepository.get(id).flatMap { rota =>
-        rota match {
-          case Some(rota) =>
-            for {
-              rotaUsers <- rotaUsersRepository.getRotaUsersWithRotaID(id)
-              users <- usersRepository.getList(rotaUsers.map(_.userID))
-              assigned <- rota.assigned
-                .map(usersRepository.get)
-                .getOrElse(Future.successful(None))
-            } yield {
-              Ok(Json.toJson(RotaWithUsers(rota, assigned, users)))
-            }
+      rotasService.retrieve(id).map { result =>
+        result match {
+          case Some(rotaWithUsers) =>
+            Ok(Json.toJson(rotaWithUsers))
           case None =>
-            val error =
-              Json.obj(
-                "message" -> messagesApi("error.resourceNotFound", "Rota", id)
-              )
-            Future.successful(NotFound(error))
+            val error = Json.obj(
+              "message" -> messagesApi("error.resourceNotFound", "Rota", id)
+            )
+            NotFound(error)
         }
       }
     }
 
-  /** Handles request for creating a new rota
+  /** Handles request for creating a new Rota
     */
   def createRota(): Action[JsValue] =
     Action.async(parse.json) { request =>
@@ -76,7 +64,7 @@ class Application @Inject() (
             Future.successful(BadRequest(response))
           },
           rota => {
-            rotasRepository.insert(rota).map { result =>
+            rotasService.create(rota).map { result =>
               Created(Json.toJson(result))
             }
           }

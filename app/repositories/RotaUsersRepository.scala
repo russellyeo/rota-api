@@ -1,6 +1,5 @@
 package repositories
 
-import java.util.Date
 import javax.inject.{Inject, Singleton}
 
 import models.RotaUser
@@ -17,17 +16,43 @@ class RotaUsersRepository @Inject() (
 
   import profile.api._
 
-  /** Count the number of rota users */
+  /** Count the number of rota users
+    *
+    * @return
+    *   the number of rota users in the database
+    */
   def count(): Future[Int] =
     db.run(rotaUsers.map(_.rotaID).length.result)
 
-  /** Get all rota users with rotaID */
-  def getRotaUsersWithRotaID(rotaID: Int): Future[Seq[RotaUser]] =
+  /** Retrieve all rota users with a given rotaID
+    *
+    * @param rotaID
+    *   the ID of the rota to retreive
+    * @return
+    *   the requested rota users
+    */
+  def retrieveRotaUsersWithRotaID(rotaID: Int): Future[Seq[RotaUser]] =
     db.run(rotaUsers.filter(_.rotaID === rotaID).result)
 
-  /** Get all rota users with userID */
-  def getRotaUsersWithUserID(userID: Int): Future[Seq[RotaUser]] =
+  /** Retrieve all rota users with a given userID
+    *
+    * @param userID
+    *   the ID of the user to retreive
+    * @return
+    *   the requested rota users
+    */
+  def retrieveRotaUsersWithUserID(userID: Int): Future[Seq[RotaUser]] =
     db.run(rotaUsers.filter(_.userID === userID).result)
+
+  /** Delete all rota users with a given rotaID
+    *
+    * @param rotaID
+    *   the ID of the user to retreive
+    * @return
+    *   the requested rota users
+    */
+  def deleteRotaUsersWithRotaID(rotaID: Int): Future[Int] =
+    db.run(rotaUsers.filter(_.rotaID === rotaID).delete)
 
 }
 

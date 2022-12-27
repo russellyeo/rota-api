@@ -1,6 +1,5 @@
 package repositories
 
-import java.util.Date
 import javax.inject.{Inject, Singleton}
 
 import models.{Rota, RotaUser}
@@ -33,20 +32,20 @@ class RotasRepository @Inject() (
   def list(): Future[Seq[Rota]] =
     db.run(rotas.result)
 
-  /** Get rota by ID
+  /** Retrieve rota by ID
     *
     * @param id
     *   the ID of the rota to retreive
     * @return
     *   the requested rota if it exists
     */
-  def get(id: Int): Future[Option[Rota]] =
+  def retrieve(id: Int): Future[Option[Rota]] =
     db.run(rotas.filter(_.id === id).result.headOption)
 
   /** Insert a new rota
     *
     * @param rota
-    *   the Rota to be created
+    *   the rota to be inserted
     */
   def insert(rota: Rota): Future[Rota] =
     db.run(rotasReturningRow += rota)
@@ -59,10 +58,7 @@ class RotasRepository @Inject() (
     *   the number of rows deleted
     */
   def delete(id: Int): Future[Int] =
-    db.run {
-      rotaUsers.filter(_.rotaID === id).delete andThen
-        rotas.filter(_.id === id).delete
-    }
+    db.run(rotas.filter(_.id === id).delete)
 
 }
 
@@ -79,9 +75,6 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
     (rota, id) => rota.copy(id = Some(id))
   }
 
-  /** Query for the ROTA_USERS table */
-  lazy protected val rotaUsers = TableQuery[RotaUsers]
-
   /** Definition of the ROTAS table */
   class Rotas(tag: Tag) extends Table[Rota](tag, "ROTAS") {
     def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
@@ -94,13 +87,5 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
       assigned,
       id.?
     ) <> ((Rota.apply _).tupled, Rota.unapply _)
-  }
-
-  /** Definition of the ROTA_USERS table */
-  class RotaUsers(tag: Tag) extends Table[RotaUser](tag, "ROTA_USERS") {
-    def rotaID = column[Int]("ROTA_ID")
-    def userID = column[Int]("USER_ID")
-
-    def * = (rotaID, userID) <> ((RotaUser.apply _).tupled, RotaUser.unapply _)
   }
 }

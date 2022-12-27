@@ -11,8 +11,8 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs.json._
 
-import models.{Rota, User, RotaUser}
-import repositories.{RotasRepository, UsersRepository, RotaUsersRepository}
+import models._
+import services.RotasService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -21,33 +21,27 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   "GET /rota/{id}" should {
 
-    "get a rota with users and an assigned user" in new WithSUT() {
-      // GIVEN
-      val rota = Rota("Retrospective", None, Some(1))
-
+    "retrieve a rota with an assigned user and some unassigned users" in new WithSUT() {
+      // GIVEN a rota with an assigned user and some unassigned users
+      val rota = Rota(
+        name = "Retrospective",
+        description = None,
+        assigned = Some(1)
+      )
       val user1 = User("Sofia", 1)
       val user2 = User("Emma", 2)
       val user3 = User("Aiden", 3)
       val users = Seq(user1, user2, user3)
 
-      val rotaUsers = Seq(
-        RotaUser(1, 1),
-        RotaUser(1, 2),
-        RotaUser(1, 3)
-      )
+      when(mockRotasService.retrieve(1))
+        .thenReturn(
+          Future.successful(Some(RotaWithUsers(rota, Some(user1), users)))
+        )
 
-      when(mockRotasRepository.get(1)).thenReturn(Future.successful(Some(rota)))
-      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1))
-        .thenReturn(Future.successful(rotaUsers))
-      when(mockUsersRepository.get(1))
-        .thenReturn(Future.successful(Some(user1)))
-      when(mockUsersRepository.getList(Seq(1, 2, 3)))
-        .thenReturn(Future.successful(users))
-
-      // WHEN
+      // WHEN we make a request to retrieve the Rota
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
 
-      // THEN
+      // THEN the response is OK and returns the expected JSON
       status(result) mustBe OK
       contentType(result) mustBe Some("application/json")
       contentAsJson(result) mustBe Json.parse("""
@@ -62,32 +56,27 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       """)
     }
 
-    "get a rota with users and no assigned user" in new WithSUT() {
-      // GIVEN
-      val rota =
-        Rota("Sprint Planning", Some("Assign tickets to the next Sprint"), None)
-
+    "retrieve a rota no assigned user and some unassigned users" in new WithSUT() {
+      // GIVEN a rota with no assigned user and some unassigned users
+      val rota = Rota(
+        name = "Sprint Planning",
+        description = Some("Assign tickets to the next Sprint"),
+        assigned = None
+      )
       val user1 = User("Yara", 1)
       val user2 = User("Ravi", 2)
       val user3 = User("Isabella", 3)
       val users = Seq(user1, user2, user3)
 
-      val rotaUsers = Seq(
-        RotaUser(1, 1),
-        RotaUser(1, 2),
-        RotaUser(1, 3)
-      )
+      when(mockRotasService.retrieve(1))
+        .thenReturn(
+          Future.successful(Some(RotaWithUsers(rota, None, users)))
+        )
 
-      when(mockRotasRepository.get(1)).thenReturn(Future.successful(Some(rota)))
-      when(mockRotaUsersRepository.getRotaUsersWithRotaID(1))
-        .thenReturn(Future.successful(rotaUsers))
-      when(mockUsersRepository.getList(Seq(1, 2, 3)))
-        .thenReturn(Future.successful(users))
-
-      // WHEN
+      // WHEN we make a request to retrieve the Rota
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
 
-      // THEN
+      // THEN the response is OK and returns the expected JSON
       status(result) mustBe OK
       contentType(result) mustBe Some("application/json")
       contentAsJson(result) mustBe Json.parse("""
@@ -102,14 +91,14 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       """)
     }
 
-    "not get a rota with id that does not exist" in new WithSUT() {
-      // GIVEN
-      when(mockRotasRepository.get(1)).thenReturn(Future.successful(None))
+    "not retrieve a rota with id that does not exist" in new WithSUT() {
+      // GIVEN there is no rota with id 1
+      when(mockRotasService.retrieve(1)).thenReturn(Future.successful(None))
 
-      // WHEN
+      // WHEN we make a request to retrieve a Rota with id 1
       val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
 
-      // THEN
+      // THEN the repsonse is Not Found with an error message
       status(result) mustBe NOT_FOUND
       contentAsJson(result) mustBe Json.obj(
         "message" -> "error.resourceNotFound"
@@ -123,37 +112,37 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     "create a rota with a description" in new WithSUT() {
       // GIVEN a rota with a description
       val rota = Rota("Sprint Planning", Some("Assign tickets"))
-      val inserted = rota.copy(id = Some(1))
+      val created = rota.copy(id = Some(1))
 
-      when(mockRotasRepository.insert(rota))
-        .thenReturn(Future.successful(inserted))
+      when(mockRotasService.create(rota))
+        .thenReturn(Future.successful(created))
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(Json.toJson(rota))
       val result = application.createRota().apply(request)
 
       // THEN the rota is created
       status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.toJson(inserted)
-      verify(mockRotasRepository).insert(rota)
+      contentAsJson(result) mustBe Json.toJson(created)
+      verify(mockRotasService).create(rota)
     }
 
     "create a rota without a description" in new WithSUT() {
       // GIVEN a rota without a description
       val rota = Rota("Retrospective")
-      val inserted = rota.copy(id = Some(1))
+      val created = rota.copy(id = Some(1))
 
-      when(mockRotasRepository.insert(rota))
-        .thenReturn(Future.successful(inserted))
+      when(mockRotasService.create(rota))
+        .thenReturn(Future.successful(created))
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(Json.toJson(rota))
       val result = application.createRota().apply(request)
 
       // THEN the rota is created
       status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.toJson(inserted)
-      verify(mockRotasRepository).insert(rota)
+      contentAsJson(result) mustBe Json.toJson(created)
+      verify(mockRotasService).create(rota)
     }
 
     "not create a rota with a missing name parameter" in new WithSUT() {
@@ -163,7 +152,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "desc" -> "Review the sprint"
       )
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
@@ -173,14 +162,14 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "message" -> "error.path.missing"
       )
       // AND the rota is not created
-      verify(mockRotasRepository, times(0)).insert(any[Rota])
+      verify(mockRotasService, times(0)).create(any[Rota])
     }
 
     "not create a rota with a name that is less than three characters" in new WithSUT() {
       // GIVEN a rota with a name less than three characters
       val rota = Json.obj("name" -> "wa")
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
@@ -190,14 +179,14 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "message" -> "error.minLength"
       )
       // AND the rota is not created
-      verify(mockRotasRepository, times(0)).insert(any[Rota])
+      verify(mockRotasService, times(0)).create(any[Rota])
     }
 
     "not create a rota with a name that is an empty string" in new WithSUT() {
       // GIVEN a rota with a name that is an empty string
       val rota = Json.obj("name" -> "")
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
@@ -207,7 +196,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "message" -> "error.empty"
       )
       // AND the rota is not created
-      verify(mockRotasRepository, times(0)).insert(any[Rota])
+      verify(mockRotasService, times(0)).create(any[Rota])
     }
 
     "not create a rota with a description that is an empty string" in new WithSUT() {
@@ -217,7 +206,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "description" -> ""
       )
 
-      // WHEN the request is received
+      // WHEN we make a request to create the Rota
       val request = FakeRequest(POST, "/rotas").withBody(rota)
       val result = application.createRota().apply(request)
 
@@ -227,7 +216,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         "message" -> "error.empty"
       )
       // AND the rota is not created
-      verify(mockRotasRepository, times(0)).insert(any[Rota])
+      verify(mockRotasService, times(0)).create(any[Rota])
     }
 
   }
@@ -235,16 +224,12 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 }
 
 trait WithSUT extends WithApplication with MockitoSugar {
-  val mockRotasRepository = mock[RotasRepository]
-  val mockUsersRepository = mock[UsersRepository]
-  val mockRotaUsersRepository = mock[RotaUsersRepository]
+  val mockRotasService = mock[RotasService]
   val messagesApi = stubMessagesApi()
   val controllerComponents = stubControllerComponents()
 
   val application = new Application(
-    mockRotasRepository,
-    mockUsersRepository,
-    mockRotaUsersRepository,
+    mockRotasService,
     messagesApi,
     controllerComponents
   )

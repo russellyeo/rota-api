@@ -7,6 +7,7 @@ CREATE TABLE ROTAS (
 );
 INSERT INTO "ROTAS" VALUES (1, 'Daily Standup', 'Share updates and kick off the day', 8);
 INSERT INTO "ROTAS" VALUES (2, 'Three Amigos', NULL, 7);
+INSERT INTO "ROTAS" VALUES (3, 'Placeholder', NULL, NULL);
 
 CREATE TABLE USERS (
     "ID" int SERIAL PRIMARY KEY, 

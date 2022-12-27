@@ -1,6 +1,5 @@
 package repositories
 
-import java.util.Date
 import javax.inject.{Inject, Singleton}
 
 import models.User
@@ -17,19 +16,39 @@ class UsersRepository @Inject() (
 
   import profile.api._
 
-  /** Count the number of users */
+  /** Count the number of users
+    *
+    * @return
+    *   the number of users in the database
+    */
   def count(): Future[Int] =
     db.run(users.map(_.name).length.result)
 
-  /** Get user with ID */
-  def get(id: Int): Future[Option[User]] =
+  /** Retrieve user by ID
+    *
+    * @param id
+    *   the ID of the user to retreive
+    * @return
+    *   the requested user if it exists
+    */
+  def retrieve(id: Int): Future[Option[User]] =
     db.run(users.filter(_.id === id).result.headOption)
 
-  /** Get a list of users from a list of IDs */
-  def getList(ids: Seq[Int]): Future[Seq[User]] =
+  /** Retrieve a list of users from a list of IDs
+    *
+    * @param ids
+    *   the IDs of the users to retrieve
+    * @return
+    *   a list of requested users
+    */
+  def retrieveList(ids: Seq[Int]): Future[Seq[User]] =
     db.run(users.filter(_.id inSet ids).result)
 
-  /** Insert a new user */
+  /** Insert a new rota
+    *
+    * @param user
+    *   the user to be inserted
+    */
   def insert(user: User): Future[User] =
     db.run(usersReturningRow += user)
 

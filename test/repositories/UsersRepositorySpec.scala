@@ -5,29 +5,31 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.test.Helpers._
 import play.api.test.{Injecting, WithApplication}
 
+import models.User
+
 class UsersRepositorySpec extends PlaySpec with GuiceOneAppPerTest {
-  import models._
 
-  "UsersRepository" should {
-
-    "have some test data" in new WithUsersRepository() {
-      val count = await(usersRepository.count())
-      count mustBe 8
+  "count" should {
+    "return the number of rotas in the database" in new WithUsersRepository() {
+      await(usersRepository.count()) mustBe 8
     }
+  }
 
+  "retrieve" should {
     "retrieve a user" in new WithUsersRepository() {
-      val user = await(usersRepository.get(1)).get
+      val user = await(usersRepository.retrieve(1)).get
       user.id mustBe 1
       user.name mustBe "Maria"
     }
+  }
 
+  "insert" should {
     "insert a new user" in new WithUsersRepository() {
       val user = User("Bob")
       val inserted = await(usersRepository.insert(user))
       inserted.id mustBe 9
       inserted.name mustBe "Bob"
     }
-
   }
 }
 
