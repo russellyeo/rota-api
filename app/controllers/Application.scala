@@ -71,4 +71,19 @@ class Application @Inject() (
         )
     }
 
+  /** Handles request for deleting a Rota
+    */
+  def deleteRota(id: Int): Action[AnyContent] =
+    Action.async {
+      rotasService.delete(id).map { result =>
+        result match {
+          case 0 =>
+            val error = Json.obj(
+              "message" -> messagesApi("error.resourceNotFound", "Rota", id)
+            )
+            NotFound(error)
+          case _ => Ok
+        }
+      }
+    }
 }

@@ -19,7 +19,7 @@ import scala.concurrent.Future
 
 class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
-  "GET /rota/{id}" should {
+  "GET /rota/:id" should {
 
     "retrieve a rota with an assigned user and some unassigned users" in new WithSUT() {
       // GIVEN a rota with an assigned user and some unassigned users
@@ -219,6 +219,39 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       verify(mockRotasService, times(0)).create(any[Rota])
     }
 
+  }
+
+  "DELETE /rotas/:id" should {
+    "delete an existing rota" in new WithSUT() {
+      // GIVEN the rota will be deleted successfully
+      when(mockRotasService.delete(1))
+        .thenReturn(Future.successful(1))
+
+      // WHEN we make a request to delete the rota
+      val result =
+        application.deleteRota(1).apply(FakeRequest(DELETE, "/rotas/1"))
+
+      // THEN the rota is deleted
+      status(result) mustBe OK
+      verify(mockRotasService).delete(1)
+    }
+
+    "fail to delete a non-existing rota" in new WithSUT() {
+      // GIVEN the rota will be not be deleted successfully
+      when(mockRotasService.delete(1))
+        .thenReturn(Future.successful(0))
+
+      // WHEN we make a request to delete the rota
+      val result =
+        application.deleteRota(1).apply(FakeRequest(DELETE, "/rotas/1"))
+
+      // THEN the rota is not deleted
+      status(result) mustBe NOT_FOUND
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "error.resourceNotFound"
+      )
+      verify(mockRotasService).delete(1)
+    }
   }
 
 }
