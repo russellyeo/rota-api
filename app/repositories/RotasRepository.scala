@@ -32,6 +32,14 @@ class RotasRepository @Inject() (
   def list(): Future[Seq[Rota]] =
     db.run(rotas.result)
 
+  /** Insert a new rota
+    *
+    * @param rota
+    *   the rota to be inserted
+    */
+  def insert(rota: Rota): Future[Rota] =
+    db.run(rotasReturningRow += rota)
+
   /** Retrieve rota by ID
     *
     * @param id
@@ -42,13 +50,47 @@ class RotasRepository @Inject() (
   def retrieve(id: Int): Future[Option[Rota]] =
     db.run(rotas.filter(_.id === id).result.headOption)
 
-  /** Insert a new rota
+  /** Update rota
     *
-    * @param rota
-    *   the rota to be inserted
+    * @param id
+    *   the ID of the rota to update
+    * @param name
+    *   the new name for the rota, if given
+    * @param description
+    *   the new description for the rota, if given
+    * @param assigned
+    *   the new assigned user ID for the rota, if given
+    * @return
+    *   the updated rota, if it was found
     */
-  def insert(rota: Rota): Future[Rota] =
-    db.run(rotasReturningRow += rota)
+  def update(
+      id: Int,
+      name: Option[String],
+      description: Option[String],
+      assigned: Option[Int]
+  ): Future[Option[Rota]] =
+    db.run(rotas.filter(_.id === id).result.headOption).flatMap {
+      case Some(rota) =>
+        val updatedRota = rota.copy(
+          name = name match {
+            case Some(value) => value
+            case None        => rota.name
+          },
+          description = description match {
+            case Some(value) => Some(value)
+            case None        => rota.description
+          },
+          assigned = assigned match {
+            case Some(value) => Some(value)
+            case None        => rota.assigned
+          }
+        )
+        db.run(rotas.filter(_.id === id).update(updatedRota)).map {
+          case 1 => Some(updatedRota)
+          case _ => None
+        }
+      case None => Future.successful(None)
+    }
 
   /** Delete a rota
     *

@@ -65,6 +65,52 @@ class RotasRepositorySpec extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 
+  "update" should {
+    "update the name of a rota" in new WithRotasRepository {
+      val result = rotasRepository.update(
+        id = 1,
+        name = Some("Standup"),
+        description = None,
+        assigned = None
+      )
+      val updated = await(result).get
+      updated.id mustBe Some(1)
+      updated.name mustBe "Standup"
+      updated.description mustBe Some("Share updates and kick off the day")
+      updated.assigned mustBe Some(8)
+    }
+
+    "update the description of a rota" in new WithRotasRepository {
+      val result = rotasRepository.update(
+        id = 1,
+        name = None,
+        description = Some("What happened yesterday, what will happen today, and any blockers"),
+        assigned = None
+      )
+      val updated = await(result).get
+      updated.id mustBe Some(1)
+      updated.name mustBe "Daily Standup"
+      updated.description mustBe Some(
+        "What happened yesterday, what will happen today, and any blockers"
+      )
+      updated.assigned mustBe Some(8)
+    }
+
+    "update the assigned user ID of a rota" in new WithRotasRepository {
+      val result = rotasRepository.update(
+        id = 1,
+        name = None,
+        description = None,
+        assigned = Some(1)
+      )
+      val updated = await(result).get
+      updated.id mustBe Some(1)
+      updated.name mustBe "Daily Standup"
+      updated.description mustBe Some("Share updates and kick off the day")
+      updated.assigned mustBe Some(1)
+    }
+  }
+
   "delete" should {
     "delete an existing rota" in new WithRotasRepository() {
       await(rotasRepository.delete(3)) mustBe 1
