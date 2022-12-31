@@ -59,6 +59,28 @@ class RotasService @Inject() (
     }
   }
 
+  /** Update a rota's details
+    *
+    * @param id
+    *   the ID of the rota to update
+    * @param name
+    *   the new name for the rota, if given
+    * @param description
+    *   the new description for the rota, if given
+    * @param assigned
+    *   the new assigned user ID for the rota, if given
+    * @return
+    *   the updated rota, if it was found
+    */
+  def update(
+      id: Int,
+      name: Option[String],
+      description: Option[String],
+      assigned: Option[Int]
+  ): Future[Option[Rota]] = {
+    rotasRepository.update(id, name, description, assigned)
+  }
+
   /** Delete a Rota
     *
     * This will also delete all RotaUsers associated with the Rota

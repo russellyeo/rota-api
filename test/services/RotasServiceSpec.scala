@@ -99,6 +99,26 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 
+  "update" should {
+    "update a rota's details" in new WithRotasService() {
+      // GIVEN the repository will return an updated rota
+      val original = Rota("Retrospective", Some("Reflect on the past sprint"), Some(4), Some(1))
+      val updated = original.copy(assigned = Some(5))
+
+      when(mockRotasRepository.retrieve(1))
+        .thenReturn(Future.successful(Some(original)))
+
+      when(mockRotasRepository.update(1, None, None, Some(5)))
+        .thenReturn(Future.successful(Some(updated)))
+
+      // WHEN we update the rota
+      val result = rotasService.update(1, None, None, assigned = Some(5))
+
+      // THEN the updated rota is returned
+      await(result) mustBe Some(updated)
+    }
+  }
+
   "delete" should {
     "delete RotaUsers and then Rota" in new WithRotasService() {
       // GIVEN the RotaUsersRepository will delete 8 RotaUsers

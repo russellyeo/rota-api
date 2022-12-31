@@ -50,7 +50,7 @@ class RotasRepository @Inject() (
   def retrieve(id: Int): Future[Option[Rota]] =
     db.run(rotas.filter(_.id === id).result.headOption)
 
-  /** Update rota
+  /** Update a rota's details
     *
     * @param id
     *   the ID of the rota to update
@@ -110,11 +110,10 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   /** Query for the ROTAS table */
   lazy protected val rotas = TableQuery[Rotas]
 
-  /** Query for the ROTAS table, returning a copy of the row after a database
-    * operation
+  /** Query for the ROTAS table, returning a copy of the row after a database operation
     */
-  lazy protected val rotasReturningRow = rotas returning rotas.map(_.id) into {
-    (rota, id) => rota.copy(id = Some(id))
+  lazy protected val rotasReturningRow = rotas returning rotas.map(_.id) into { (rota, id) =>
+    rota.copy(id = Some(id))
   }
 
   /** Definition of the ROTAS table */
