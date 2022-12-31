@@ -12,6 +12,7 @@ import play.api.test.Helpers._
 import play.api.libs.json._
 
 import models._
+import models.dto._
 import services.RotasService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -219,6 +220,28 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       verify(mockRotasService, times(0)).create(any[Rota])
     }
 
+  }
+
+  "PATCH /rotas/:id" should {
+    "update a rota's assigned user ID" in new WithSUT() {
+      // GIVEN an updated rota will be returned from RotasService
+      val updated = Rota(
+        name = "Sprint Planning",
+        description = Some("Assign tickets"),
+        assigned = Some(5),
+        id = Some(1)
+      )
+      when(mockRotasService.update(id = 1, name = None, description = None, assigned = Some(5)))
+        .thenReturn(Future.successful(Some(updated)))
+
+      // WHEN we make a request to update the rota's assigned user ID
+      val request = FakeRequest(PATCH, "/rotas/1").withBody(Json.obj("assigned" -> 5))
+      val response = application.updateRota(1).apply(request)
+
+      // THEN the rota is updated
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.obj("assigned" -> 5)
+    }
   }
 
   "DELETE /rotas/:id" should {

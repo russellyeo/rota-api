@@ -7,6 +7,7 @@ import play.api.libs.json._
 import play.api.i18n._
 
 import scala.concurrent.{ExecutionContext, Future}
+import models.dto._
 import models._
 import services._
 
@@ -30,8 +31,7 @@ class Application @Inject() (
       }
     }
 
-  /** Handles request to retrieve a Rota with its assigned user and all
-    * unassigned users
+  /** Handles request to retrieve a Rota with its assigned user and all unassigned users
     */
   def rota(id: Int): Action[AnyContent] =
     Action.async {
@@ -67,6 +67,41 @@ class Application @Inject() (
             rotasService.create(rota).map { result =>
               Created(Json.toJson(result))
             }
+          }
+        )
+    }
+
+  /** Handles request for updating a rota's details
+    */
+  def updateRota(id: Int): Action[JsValue] =
+    Action.async(parse.json) { request =>
+      request.body
+        .validate[UpdateRotaDTO]
+        .fold(
+          errors => {
+            // Handle only the first validation error of the first field with validation errors
+            val error = errors.head._2.head
+            val response = Json.obj(
+              "message" -> messagesApi(error.message, error.args: _*)
+            )
+            Future.successful(BadRequest(response))
+          },
+          rota => {
+            rotasService
+              .update(
+                id = id,
+                name = rota.name,
+                description = rota.description,
+                assigned = rota.assigned
+              )
+              .map { updated =>
+                updated match {
+                  case Some(rota) =>
+                    Ok(request.body)
+                  case None =>
+                    NotFound
+                }
+              }
           }
         )
     }

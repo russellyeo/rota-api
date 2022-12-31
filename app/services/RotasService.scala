@@ -74,9 +74,9 @@ class RotasService @Inject() (
     */
   def update(
       id: Int,
-      name: Option[String],
-      description: Option[String],
-      assigned: Option[Int]
+      name: Option[String] = None,
+      description: Option[String] = None,
+      assigned: Option[Int] = None
   ): Future[Option[Rota]] = {
     rotasRepository.update(id, name, description, assigned)
   }
