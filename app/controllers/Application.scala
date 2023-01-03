@@ -11,6 +11,8 @@ import models.dto._
 import models._
 import services._
 
+import scala.collection.Seq
+
 /** The main Application controller */
 @Singleton
 class Application @Inject() (
@@ -37,13 +39,8 @@ class Application @Inject() (
     Action.async {
       rotasService.retrieve(id).map { result =>
         result match {
-          case Some(rotaWithUsers) =>
-            Ok(Json.toJson(rotaWithUsers))
-          case None =>
-            val error = Json.obj(
-              "message" -> messagesApi("error.resourceNotFound", "Rota", id)
-            )
-            NotFound(error)
+          case Some(rotaWithUsers) => Ok(Json.toJson(rotaWithUsers))
+          case None                => NotFound(notFoundErrorMessage(id, "rota"))
         }
       }
     }
@@ -56,12 +53,8 @@ class Application @Inject() (
         .validate[Rota]
         .fold(
           errors => {
-            // Handle only the first validation error of the first field with validation errors
-            val error = errors.head._2.head
-            val response = Json.obj(
-              "message" -> messagesApi(error.message, error.args: _*)
-            )
-            Future.successful(BadRequest(response))
+            val errorMessage = validationErrorMessage(errors)
+            Future.successful(BadRequest(errorMessage))
           },
           rota => {
             rotasService.create(rota).map { result =>
@@ -79,12 +72,8 @@ class Application @Inject() (
         .validate[UpdateRotaDTO]
         .fold(
           errors => {
-            // Handle only the first validation error of the first field with validation errors
-            val error = errors.head._2.head
-            val response = Json.obj(
-              "message" -> messagesApi(error.message, error.args: _*)
-            )
-            Future.successful(BadRequest(response))
+            val errorMessage = validationErrorMessage(errors)
+            Future.successful(BadRequest(errorMessage))
           },
           rota => {
             rotasService
@@ -96,10 +85,8 @@ class Application @Inject() (
               )
               .map { updated =>
                 updated match {
-                  case Some(rota) =>
-                    Ok(request.body)
-                  case None =>
-                    NotFound
+                  case Some(rota) => Ok(request.body)
+                  case None       => NotFound(notFoundErrorMessage(id, "rota"))
                 }
               }
           }
@@ -112,13 +99,25 @@ class Application @Inject() (
     Action.async {
       rotasService.delete(id).map { result =>
         result match {
-          case 0 =>
-            val error = Json.obj(
-              "message" -> messagesApi("error.resourceNotFound", "Rota", id)
-            )
-            NotFound(error)
+          case 0 => NotFound(notFoundErrorMessage(id, "rota"))
           case _ => Ok
         }
       }
     }
+
+  private def validationErrorMessage(
+      errors: Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
+  ): JsObject = {
+    // Handle only the first validation error of the first field with validation errors
+    val error = errors.head._2.head
+    Json.obj(
+      "message" -> messagesApi(error.message, error.args: _*)
+    )
+  }
+
+  private def notFoundErrorMessage(id: Int, resource: String): JsObject =
+    Json.obj(
+      "message" -> messagesApi("error.resourceNotFound", resource, id)
+    )
+
 }
