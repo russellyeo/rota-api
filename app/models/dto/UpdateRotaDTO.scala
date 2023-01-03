@@ -16,15 +16,15 @@ object UpdateRotaDTO {
     // `name` is optional and should have at least 3 characters if it is given
     val name = (JsPath \ "name")
       .readNullable[String]
-      .filterNot(JsonValidationError("error.minLength", "name", 3))(string =>
-        string.isDefined && string.size <= 3
+      .filter(JsonValidationError("error.minLength", "name", 3))(string =>
+        string.forall(_.size >= 3)
       )
 
     // `description` is optional and should have at least 3 characters if it is given
     val description = (JsPath \ "description")
       .readNullable[String]
-      .filterNot(JsonValidationError("error.minLength", "name", 3))(string =>
-        string.isDefined && string.size <= 3
+      .filter(JsonValidationError("error.minLength", "description", 3))(string =>
+        string.forall(_.size >= 3)
       )
 
     // `assigned` is optional

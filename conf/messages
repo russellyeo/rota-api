@@ -3,4 +3,4 @@
 
 error.resourceNotFound={0} with id {1} not found
 error.empty=Bad Request: Parameter "{0}" cannot be empty.
-error.minLength=Bad Request: Invalid value for parameter "{0}". Expected a name with a minimum length of {1} characters.
+error.minLength=Bad Request: Invalid value for parameter "{0}". Expected a {0} with a minimum length of {1} characters.

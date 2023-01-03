@@ -17,6 +17,7 @@ import services.RotasService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.checkerframework.checker.initialization.qual.NotOnlyInitialized
 
 class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
@@ -241,6 +242,86 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       // THEN the rota is updated
       status(response) mustBe OK
       contentAsJson(response) mustBe Json.obj("assigned" -> 5)
+    }
+
+    "update a rota's name" in new WithSUT() {
+      // GIVEN an updated rota will be returned from RotasService
+      val updated = Rota(
+        name = "Planning",
+        description = Some("Assign tickets"),
+        assigned = Some(5),
+        id = Some(1)
+      )
+      when(
+        mockRotasService.update(
+          id = 1,
+          name = Some("Planning"),
+          description = None,
+          assigned = None
+        )
+      ).thenReturn(Future.successful(Some(updated)))
+
+      // WHEN we make a request to update the rota's assigned user ID
+      val request = FakeRequest(PATCH, "/rotas/1").withBody(
+        Json.obj("name" -> "Planning")
+      )
+      val response = application.updateRota(1).apply(request)
+
+      // THEN the rota is updated
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.obj("name" -> "Planning")
+    }
+
+    "update a rota's description" in new WithSUT() {
+      // GIVEN an updated rota will be returned from RotasService
+      val updated = Rota(
+        name = "Sprint Planning",
+        description = Some("Plan, estimate, and assign tickets"),
+        assigned = Some(5),
+        id = Some(1)
+      )
+      when(
+        mockRotasService.update(
+          id = 1,
+          name = None,
+          description = Some("Plan, estimate, and assign tickets"),
+          assigned = None
+        )
+      ).thenReturn(Future.successful(Some(updated)))
+
+      // WHEN we make a request to update the rota's assigned user ID
+      val request = FakeRequest(PATCH, "/rotas/1").withBody(
+        Json.obj("description" -> "Plan, estimate, and assign tickets")
+      )
+      val response = application.updateRota(1).apply(request)
+
+      // THEN the rota is updated
+      status(response) mustBe OK
+      contentAsJson(response) mustBe Json.obj("description" -> "Plan, estimate, and assign tickets")
+    }
+
+    "fail to update a rota's name if it less than 3 characters" in new WithSUT() {
+      // WHEN we make a request to update the rota's assigned user ID
+      val request = FakeRequest(PATCH, "/rotas/1").withBody(
+        Json.obj("name" -> "x")
+      )
+      val response = application.updateRota(1).apply(request)
+
+      // THEN the rota is updated
+      status(response) mustBe BAD_REQUEST
+      contentAsJson(response) mustBe Json.obj("message" -> "error.minLength")
+    }
+
+    "fail to update a rota's description if it less than 3 characters" in new WithSUT() {
+      // WHEN we make a request to update the rota's assigned user ID
+      val request = FakeRequest(PATCH, "/rotas/1").withBody(
+        Json.obj("description" -> "y")
+      )
+      val response = application.updateRota(1).apply(request)
+
+      // THEN the rota is updated
+      status(response) mustBe BAD_REQUEST
+      contentAsJson(response) mustBe Json.obj("message" -> "error.minLength")
     }
   }
 
