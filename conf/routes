@@ -6,4 +6,5 @@
 GET     /rotas                      controllers.Application.list()
 GET     /rotas/:id                  controllers.Application.rota(id: Int)
 POST    /rotas                      controllers.Application.createRota()
+PATCH   /rotas/:id                  controllers.Application.updateRota(id: Int)
 DELETE  /rotas/:id                  controllers.Application.deleteRota(id: Int)
