@@ -41,7 +41,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         )
 
       // WHEN we make a request to retrieve the Rota
-      val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
+      val result = application.retrieveRota(1).apply(FakeRequest(GET, "/rotas/1"))
 
       // THEN the response is OK and returns the expected JSON
       status(result) mustBe OK
@@ -76,7 +76,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         )
 
       // WHEN we make a request to retrieve the Rota
-      val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
+      val result = application.retrieveRota(1).apply(FakeRequest(GET, "/rotas/1"))
 
       // THEN the response is OK and returns the expected JSON
       status(result) mustBe OK
@@ -98,7 +98,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
       when(mockRotasService.retrieve(1)).thenReturn(Future.successful(None))
 
       // WHEN we make a request to retrieve a Rota with id 1
-      val result = application.rota(1).apply(FakeRequest(GET, "/rotas/1"))
+      val result = application.retrieveRota(1).apply(FakeRequest(GET, "/rotas/1"))
 
       // THEN the repsonse is Not Found with an error message
       status(result) mustBe NOT_FOUND

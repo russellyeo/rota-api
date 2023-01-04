@@ -13,7 +13,7 @@ import services._
 
 import scala.collection.Seq
 
-/** The main Application controller */
+/** The main application controller */
 @Singleton
 class Application @Inject() (
     rotasService: RotasService,
@@ -24,28 +24,16 @@ class Application @Inject() (
 
   implicit val lang: Lang = Lang("en")
 
-  /** Handles request for retrieving all Rotas
+  /** Handles request for retrieving all rotas
     */
-  def list: Action[AnyContent] =
+  def listRotas: Action[AnyContent] =
     Action.async {
       rotasService.list().map { result =>
         Ok(Json.toJson(result))
       }
     }
 
-  /** Handles request to retrieve a Rota with its assigned user and all unassigned users
-    */
-  def rota(id: Int): Action[AnyContent] =
-    Action.async {
-      rotasService.retrieve(id).map { result =>
-        result match {
-          case Some(rotaWithUsers) => Ok(Json.toJson(rotaWithUsers))
-          case None                => NotFound(notFoundErrorMessage(id, "rota"))
-        }
-      }
-    }
-
-  /** Handles request for creating a new Rota
+  /** Handles request for creating a new rota
     */
   def createRota(): Action[JsValue] =
     Action.async(parse.json) { request =>
@@ -62,6 +50,18 @@ class Application @Inject() (
             }
           }
         )
+    }
+
+  /** Handles request to retrieve a rota with its assigned user and all unassigned users
+    */
+  def retrieveRota(id: Int): Action[AnyContent] =
+    Action.async {
+      rotasService.retrieve(id).map { result =>
+        result match {
+          case Some(rotaWithUsers) => Ok(Json.toJson(rotaWithUsers))
+          case None                => NotFound(notFoundErrorMessage(id, "rota"))
+        }
+      }
     }
 
   /** Handles request for updating a rota's details
@@ -93,7 +93,7 @@ class Application @Inject() (
         )
     }
 
-  /** Handles request for deleting a Rota
+  /** Handles request for deleting a rota
     */
   def deleteRota(id: Int): Action[AnyContent] =
     Action.async {

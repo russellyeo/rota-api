@@ -13,32 +13,32 @@ class RotasService @Inject() (
     rotaUsersRepository: RotaUsersRepository
 )(implicit executionContext: ExecutionContext) {
 
-  /** Retrieve all Rotas
+  /** Retrieve all rotas
     *
     * @return
-    *   A list of Rotas
+    *   a list of rotas
     */
   def list(): Future[Seq[Rota]] = {
     rotasRepository.list()
   }
 
-  /** Create a new Rota
+  /** Create a new rota
     *
     * @param rota
-    *   The Rota to insert
+    *   the Rota to insert
     * @return
-    *   The inserted Rota
+    *   the inserted Rota
     */
   def create(rota: Rota): Future[Rota] = {
     rotasRepository.insert(rota)
   }
 
-  /** Retrieve a Rota with its assigned user and all unassigned users
+  /** Retrieve a rota
     *
     * @param id
-    *   The ID of the Rota to retrieve
+    *   the ID of the rota to retrieve
     * @return
-    *   RotaWithUsers
+    *   the requested rota with its assigned user and all unassigned users
     */
   def retrieve(id: Int): Future[Option[RotaWithUsers]] = {
     rotasRepository.retrieve(id).flatMap { rota =>
@@ -86,9 +86,9 @@ class RotasService @Inject() (
     * This will also delete all RotaUsers associated with the Rota
     *
     * @param id
-    *   The ID of the Rota to get
+    *   the ID of the Rota to get
     * @return
-    *   RotaWithUsers
+    *   the number of rotas deleted
     */
   def delete(id: Int): Future[Int] = {
     for {
