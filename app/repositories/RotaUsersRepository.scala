@@ -24,6 +24,14 @@ class RotaUsersRepository @Inject() (
   def count(): Future[Int] =
     db.run(rotaUsers.map(_.rotaID).length.result)
 
+  /** Create rota users
+    *
+    * @param rotaUsers
+    *   the rota users to be inserted
+    */
+  def createRotaUsers(rotaUsers: Seq[RotaUser]): Unit =
+    db.run(this.rotaUsers ++= rotaUsers)
+
   /** Retrieve all rota users with a given rotaID
     *
     * @param rotaID

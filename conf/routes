@@ -3,8 +3,12 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
+# Rotas
 GET     /rotas                      controllers.Application.listRotas()
 GET     /rotas/:id                  controllers.Application.retrieveRota(id: Int)
 POST    /rotas                      controllers.Application.createRota()
 PATCH   /rotas/:id                  controllers.Application.updateRota(id: Int)
 DELETE  /rotas/:id                  controllers.Application.deleteRota(id: Int)
+
+# Rota's Users
+POST    /rotas/:id/users            controllers.Application.addUsersToRota(id: Int)

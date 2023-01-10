@@ -18,6 +18,7 @@ import services.RotasService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.checkerframework.checker.initialization.qual.NotOnlyInitialized
+import services.UsersService
 
 class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
@@ -358,15 +359,54 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     }
   }
 
+  "POST /rotas/:id/users" should {
+    "add users to a rota" in new WithSUT() {
+      // GIVEN
+      val rota = Rota("Standup", None, None, Some(1))
+      val usersToAdd = Seq("James", "John")
+      val createdUsers = Seq(User("James", 1), User("John", 2))
+      val rotaUsers = Seq(RotaUser(1, 1), RotaUser(1, 2))
+      val updatedRota = RotaWithUsers(rota, None, createdUsers)
+
+      when(mockUsersService.createUsersIfNeeded(usersToAdd))
+        .thenReturn(Future.successful(createdUsers))
+
+      when(mockRotasService.addUsersToRota(1, createdUsers))
+        .thenReturn(Future.successful(rotaUsers))
+
+      when(mockRotasService.retrieve(1))
+        .thenReturn(Future.successful(Some(updatedRota)))
+
+      // WHEN the request is made
+      val request = FakeRequest(POST, "/rotas/1/users").withBody(
+        Json.obj("users" -> usersToAdd)
+      )
+      val result = application.addUsersToRota(1).apply(request)
+
+      // THEN
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj(
+        "rota" -> Json.obj(
+          "name" -> "Standup",
+          "description" -> JsNull
+        ),
+        "assigned" -> JsNull,
+        "users" -> JsArray(Seq("James", "John").map(JsString))
+      )
+    }
+  }
+
 }
 
 trait WithSUT extends WithApplication with MockitoSugar {
   val mockRotasService = mock[RotasService]
+  val mockUsersService = mock[UsersService]
   val messagesApi = stubMessagesApi()
   val controllerComponents = stubControllerComponents()
 
   val application = new Application(
     mockRotasService,
+    mockUsersService,
     messagesApi,
     controllerComponents
   )

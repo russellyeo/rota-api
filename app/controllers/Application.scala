@@ -17,6 +17,7 @@ import scala.collection.Seq
 @Singleton
 class Application @Inject() (
     rotasService: RotasService,
+    usersService: UsersService,
     messagesApi: MessagesApi,
     cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -103,6 +104,27 @@ class Application @Inject() (
           case _ => Ok
         }
       }
+    }
+
+  def addUsersToRota(id: Int): Action[JsValue] =
+    Action.async(parse.json) { request =>
+      request.body
+        .validate[AddUsersToRotaDTO]
+        .fold(
+          errors => {
+            val errorMessage = validationErrorMessage(errors)
+            Future.successful(BadRequest(errorMessage))
+          },
+          usersToAdd => {
+            for {
+              users <- usersService.createUsersIfNeeded(usersToAdd.users)
+              _ <- rotasService.addUsersToRota(id, users)
+              rota <- rotasService.retrieve(id)
+            } yield {
+              Ok(Json.toJson(rota))
+            }
+          }
+        )
     }
 
   private def validationErrorMessage(

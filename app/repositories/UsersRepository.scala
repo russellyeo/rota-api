@@ -34,6 +34,16 @@ class UsersRepository @Inject() (
   def retrieve(id: Int): Future[Option[User]] =
     db.run(users.filter(_.id === id).result.headOption)
 
+  /** Retrieve user by name
+    *
+    * @param name
+    *   the name of the user to retreive
+    * @return
+    *   the requested user if it exists
+    */
+  def retrieve(name: String): Future[Option[User]] =
+    db.run(users.filter(_.name === name).result.headOption)
+
   /** Retrieve a list of users from a list of IDs
     *
     * @param ids
@@ -48,9 +58,11 @@ class UsersRepository @Inject() (
     *
     * @param user
     *   the user to be inserted
+    * @return
+    *   the inserted user
     */
   def insert(user: User): Future[User] =
-    db.run(usersReturningRow += user)
+    db.run(usersReturningRecord += user)
 
 }
 
@@ -60,12 +72,9 @@ trait UsersComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   /** Query for the USERS table */
   lazy protected val users = TableQuery[Users]
 
-  /** Query for the USERS table, returning a copy of the row after a database
-    * operation
-    */
-  lazy protected val usersReturningRow = users returning users.map(_.id) into {
-    (rota, id) =>
-      rota.copy(id = id)
+  /** Query for the USERS table, returning a copy of the record after a database operation */
+  lazy protected val usersReturningRecord = users returning users.map(_.id) into { (rota, id) =>
+    rota.copy(id = id)
   }
 
   /** Definition of the USERS table */

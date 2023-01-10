@@ -3,7 +3,7 @@ package services
 import javax.inject.{Inject}
 
 import repositories._
-import models.{Rota, RotaWithUsers}
+import models.{Rota, RotaUser, RotaWithUsers, User}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,9 +25,9 @@ class RotasService @Inject() (
   /** Create a new rota
     *
     * @param rota
-    *   the Rota to insert
+    *   the rota to insert
     * @return
-    *   the inserted Rota
+    *   the inserted rota
     */
   def create(rota: Rota): Future[Rota] = {
     rotasRepository.insert(rota)
@@ -81,12 +81,12 @@ class RotasService @Inject() (
     rotasRepository.update(id, name, description, assigned)
   }
 
-  /** Delete a Rota
+  /** Delete a rota
     *
     * This will also delete all RotaUsers associated with the Rota
     *
     * @param id
-    *   the ID of the Rota to get
+    *   the ID of the rota to get
     * @return
     *   the number of rotas deleted
     */
@@ -97,6 +97,19 @@ class RotasService @Inject() (
     } yield {
       deletedRotas
     }
+  }
+
+  /** Add users to a rota
+    *
+    * @param rotaID
+    *   the ID of the rota to add to
+    * @return
+    *   the rota users that were inserted
+    */
+  def addUsersToRota(rotaID: Int, users: Seq[User]): Future[Seq[RotaUser]] = {
+    val rotaUsers = users.map(user => RotaUser(rotaID, user.id))
+    rotaUsersRepository.createRotaUsers(rotaUsers)
+    Future.successful(rotaUsers)
   }
 
 }
