@@ -396,6 +396,37 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     }
   }
 
+  "GET /rotas/:id/rotate" should {
+    "rotate the rota's assigned user" in new WithSUT() {
+      // GIVEN a rota will be rotated successfully
+      val rota = Rota("Standup", None, Some(2), Some(1))
+      val users = Seq(User("Maria", 1), User("Mohammed", 2), User("Beatrice", 3))
+      val rotaUsers = Seq(RotaUser(1, 1), RotaUser(1, 2), RotaUser(1, 3))
+      val rotaWithUsers = RotaWithUsers(rota, Some(User("Mohammed", 2)), users)
+
+      when(mockRotasService.rotate(1))
+        .thenReturn(Future.successful(Some(rota)))
+
+      when(mockRotasService.retrieve(1))
+        .thenReturn(Future.successful(Some(rotaWithUsers)))
+
+      // WHEN the request is made
+      val request = FakeRequest(GET, "/rotas/1/rotate")
+      val result = application.rotateRota(1).apply(request)
+
+      // THEN the updated rota with users is returned
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj(
+        "rota" -> Json.obj(
+          "name" -> "Standup",
+          "description" -> JsNull
+        ),
+        "assigned" -> "Mohammed",
+        "users" -> JsArray(Seq("Maria", "Mohammed", "Beatrice").map(JsString))
+      )
+    }
+  }
+
 }
 
 trait WithSUT extends WithApplication with MockitoSugar {

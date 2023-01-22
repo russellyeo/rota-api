@@ -106,6 +106,8 @@ class Application @Inject() (
       }
     }
 
+  /** Handles request for updating the users in a rota
+    */
   def addUsersToRota(id: Int): Action[JsValue] =
     Action.async(parse.json) { request =>
       request.body
@@ -125,6 +127,16 @@ class Application @Inject() (
             }
           }
         )
+    }
+
+  def rotateRota(id: Int): Action[AnyContent] =
+    Action.async {
+      for {
+        _ <- rotasService.rotate(id)
+        updated <- rotasService.retrieve(id)
+      } yield {
+        Ok(Json.toJson(updated))
+      }
     }
 
   private def validationErrorMessage(

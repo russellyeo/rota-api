@@ -138,6 +138,37 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 
+  "rotate" should {
+    "rotate a rota" in new WithRotasService() {
+      // GIVEN a rota wih some users and Emma is the assigned user
+      val user1 = User(name = "Sofia", id = 1)
+      val user2 = User(name = "Emma", id = 2)
+      val user3 = User(name = "Bob", id = 3)
+      val rota = Rota(name = "Retrospective", assigned = Some(2), id = Some(1))
+      val rotaUser1 = RotaUser(rotaID = 1, userID = 1)
+      val rotaUser2 = RotaUser(rotaID = 1, userID = 2)
+      val rotaUser3 = RotaUser(rotaID = 1, userID = 3)
+
+      // AND the rota will be successfully retrieved
+      when(mockRotasRepository.retrieve(1))
+        .thenReturn(Future.successful(Some(rota)))
+
+      // AND the rota users will be successfully retrieved
+      when(mockRotaUsersRepository.retrieveRotaUsersWithRotaID(1))
+        .thenReturn(Future.successful(Seq(rotaUser1, rotaUser2, rotaUser3)))
+
+      // AND the rota will be successfully updated to assign the next user
+      when(mockRotasRepository.update(id = 1, name = None, description = None, assigned = Some(3)))
+        .thenReturn(Future.successful(Some(rota.copy(assigned = Some(3)))))
+
+      // WHEN we rotate the rota
+      val result = rotasService.rotate(1)
+
+      // THEN Bob is the new assigned user
+      await(result) mustBe Some(Rota(name = "Retrospective", assigned = Some(3), id = Some(1)))
+    }
+  }
+
 }
 
 trait WithRotasService extends WithApplication with MockitoSugar {

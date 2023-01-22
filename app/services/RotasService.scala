@@ -112,4 +112,34 @@ class RotasService @Inject() (
     Future.successful(rotaUsers)
   }
 
+  /** Rotate a rota's assigned user
+    *
+    * @param rotaID
+    *   the ID of the rota to rotate
+    * @return
+    *   the updated rota
+    */
+  def rotate(rotaID: Int): Future[Option[Rota]] = {
+    for {
+      rota <- rotasRepository.retrieve(rotaID)
+      rotaUsers <- rotaUsersRepository.retrieveRotaUsersWithRotaID(rotaID)
+      updatedRota <- rota match {
+        case Some(rota) =>
+          val newAssigned = rota.assigned match {
+            case Some(assigned) =>
+              val assignedIndex = rotaUsers.indexWhere(_.userID == assigned)
+              val nextIndex = (assignedIndex + 1) % rotaUsers.length
+              Some(rotaUsers(nextIndex))
+            case None =>
+              Some(rotaUsers.head)
+          }
+          rotasRepository.update(rotaID, None, None, assigned = newAssigned.map(_.userID))
+        case None =>
+          Future.successful(None)
+      }
+    } yield {
+      updatedRota
+    }
+  }
+
 }

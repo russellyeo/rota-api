@@ -12,3 +12,6 @@ DELETE  /rotas/:id                  controllers.Application.deleteRota(id: Int)
 
 # Rota's Users
 POST    /rotas/:id/users            controllers.Application.addUsersToRota(id: Int)
+
+# Rotate
+GET     /rotas/:id/rotate           controllers.Application.rotateRota(id: Int)
