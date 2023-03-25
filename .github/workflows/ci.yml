@@ -38,6 +38,5 @@ jobs:
       - name: Deploy to Digital Ocean
         shell: bash
         run: |
-          doctl auth switch --context rota
-          docker login registry.digitalocean.com/russellyeo
+          doctl registry login registry.digitalocean.com/russellyeo --expiry-seconds 100
           docker push registry.digitalocean.com/russellyeo/rota
