@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           sbt -v docker:publishLocal
-          docker tag registry.digitalocean.com/russellyeo/rota:latest
+          docker tag rota:latest registry.digitalocean.com/russellyeo/rota:latest
 
       - name: Deploy to Digital Ocean
         shell: bash
