@@ -17,9 +17,27 @@ jobs:
           distribution: temurin
           java-version: 11
 
+      - name: Install Digital Ocean CLI
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Build and test
         shell: bash
         run: sbt -v test
+
+      - name: Prepare Docker image
+        shell: bash
+        run: |
+          sbt -v docker:publish
+          docker tag registry.digitalocean.com/russellyeo/rota:latest
+
+      - name: Deploy to Digital Ocean
+        shell: bash
+        run: |
+          doctl auth switch --context rota
+          docker login registry.digitalocean.com/russellyeo
+          docker push registry.digitalocean.com/russellyeo/rota
