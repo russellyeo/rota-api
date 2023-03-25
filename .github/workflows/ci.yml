@@ -29,10 +29,10 @@ jobs:
         shell: bash
         run: sbt -v test
 
-      - name: Prepare Docker image
+      - name: Build and tag Docker image
         shell: bash
         run: |
-          sbt -v docker:publish
+          sbt -v docker:publishLocal
           docker tag registry.digitalocean.com/russellyeo/rota:latest
 
       - name: Deploy to Digital Ocean
