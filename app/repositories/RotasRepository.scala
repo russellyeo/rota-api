@@ -22,7 +22,7 @@ class RotasRepository @Inject() (
     *   the number of rotas in the database
     */
   def count(): Future[Int] =
-    db.run(rotas.map(_.id).length.result)
+    db.run(rotas.map(_.name).length.result)
 
   /** List all rotas
     *
@@ -40,22 +40,20 @@ class RotasRepository @Inject() (
   def insert(rota: Rota): Future[Rota] =
     db.run(rotasReturningRow += rota)
 
-  /** Retrieve rota by ID
+  /** Retrieve rota
     *
-    * @param id
-    *   the ID of the rota to retreive
+    * @param name
+    *   the name of the rota to retreive
     * @return
     *   the requested rota if it exists
     */
-  def retrieve(id: Int): Future[Option[Rota]] =
-    db.run(rotas.filter(_.id === id).result.headOption)
+  def retrieve(name: String): Future[Option[Rota]] =
+    db.run(rotas.filter(_.name === name).result.headOption)
 
   /** Update a rota's details
     *
-    * @param id
-    *   the ID of the rota to update
     * @param name
-    *   the new name for the rota, if given
+    *   the name of the rota to update
     * @param description
     *   the new description for the rota, if given
     * @param assigned
@@ -64,18 +62,13 @@ class RotasRepository @Inject() (
     *   the updated rota, if it was found
     */
   def update(
-      id: Int,
-      name: Option[String] = None,
+      name: String,
       description: Option[String] = None,
       assigned: Option[Int] = None
   ): Future[Option[Rota]] =
-    db.run(rotas.filter(_.id === id).result.headOption).flatMap {
+    db.run(rotas.filter(_.name === name).result.headOption).flatMap {
       case Some(rota) =>
         val updatedRota = rota.copy(
-          name = name match {
-            case Some(value) => value
-            case None        => rota.name
-          },
           description = description match {
             case Some(value) => Some(value)
             case None        => rota.description
@@ -85,7 +78,7 @@ class RotasRepository @Inject() (
             case None        => rota.assigned
           }
         )
-        db.run(rotas.filter(_.id === id).update(updatedRota)).map {
+        db.run(rotas.filter(_.name === name).update(updatedRota)).map {
           case 1 => Some(updatedRota)
           case _ => None
         }
@@ -94,13 +87,13 @@ class RotasRepository @Inject() (
 
   /** Delete a rota
     *
-    * @param id
-    *   the ID of the rota to delete
+    * @param name
+    *   the name of the rota to delete
     * @return
     *   the number of rows deleted
     */
-  def delete(id: Int): Future[Int] =
-    db.run(rotas.filter(_.id === id).delete)
+  def delete(name: String): Future[Int] =
+    db.run(rotas.filter(_.name === name).delete)
 
 }
 
@@ -112,21 +105,15 @@ trait RotasComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   /** Query for the ROTAS table, returning a copy of the row after a database operation
     */
-  lazy protected val rotasReturningRow = rotas returning rotas.map(_.id) into { (rota, id) =>
-    rota.copy(id = Some(id))
+  lazy protected val rotasReturningRow = rotas returning rotas.map(_.name) into { (rota, name) =>
+    rota.copy(name = name)
   }
 
   /** Definition of the ROTAS table */
   class Rotas(tag: Tag) extends Table[Rota](tag, "ROTAS") {
-    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("NAME")
+    def name = column[String]("NAME", O.PrimaryKey)
     def description = column[Option[String]]("DESCRIPTION")
     def assigned = column[Option[Int]]("ASSIGNED_USER_ID")
-    def * = (
-      name,
-      description,
-      assigned,
-      id.?
-    ) <> ((Rota.apply _).tupled, Rota.unapply _)
+    def * = (name, description, assigned) <> ((Rota.apply _).tupled, Rota.unapply _)
   }
 }

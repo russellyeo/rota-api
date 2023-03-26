@@ -22,7 +22,7 @@ class RotaUsersRepository @Inject() (
     *   the number of rota users in the database
     */
   def count(): Future[Int] =
-    db.run(rotaUsers.map(_.rotaID).length.result)
+    db.run(rotaUsers.map(_.rotaName).length.result)
 
   /** Create rota users
     *
@@ -32,15 +32,15 @@ class RotaUsersRepository @Inject() (
   def createRotaUsers(rotaUsers: Seq[RotaUser]): Unit =
     db.run(this.rotaUsers ++= rotaUsers)
 
-  /** Retrieve all rota users with a given rotaID
+  /** Retrieve all users in a given rota
     *
-    * @param rotaID
-    *   the ID of the rota to retreive
+    * @param rotaName
+    *   the name of the rota to retreive
     * @return
-    *   the requested rota users
+    *   the users in the rota
     */
-  def retrieveRotaUsersWithRotaID(rotaID: Int): Future[Seq[RotaUser]] =
-    db.run(rotaUsers.filter(_.rotaID === rotaID).result)
+  def retrieveRotaUsersInRota(rotaName: String): Future[Seq[RotaUser]] =
+    db.run(rotaUsers.filter(_.rotaName === rotaName).result)
 
   /** Retrieve all rota users with a given userID
     *
@@ -54,13 +54,13 @@ class RotaUsersRepository @Inject() (
 
   /** Delete all rota users with a given rotaID
     *
-    * @param rotaID
-    *   the ID of the user to retreive
+    * @param rotaName
+    *   the name of the rota to retreive
     * @return
     *   the requested rota users
     */
-  def deleteRotaUsersWithRotaID(rotaID: Int): Future[Int] =
-    db.run(rotaUsers.filter(_.rotaID === rotaID).delete)
+  def deleteRotaUsersInRota(rotaName: String): Future[Int] =
+    db.run(rotaUsers.filter(_.rotaName === rotaName).delete)
 
 }
 
@@ -72,9 +72,9 @@ trait RotaUsersComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
 
   /** Definition of the ROTA_USERS table */
   class RotaUsers(tag: Tag) extends Table[RotaUser](tag, "ROTA_USERS") {
-    def rotaID = column[Int]("ROTA_ID")
+    def rotaName = column[String]("ROTA_NAME")
     def userID = column[Int]("USER_ID")
 
-    def * = (rotaID, userID) <> ((RotaUser.apply _).tupled, RotaUser.unapply _)
+    def * = (rotaName, userID) <> ((RotaUser.apply _).tupled, RotaUser.unapply _)
   }
 }

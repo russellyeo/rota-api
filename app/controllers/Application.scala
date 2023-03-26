@@ -55,19 +55,19 @@ class Application @Inject() (
 
   /** Handles request to retrieve a rota with its assigned user and all unassigned users
     */
-  def retrieveRota(id: Int): Action[AnyContent] =
+  def retrieveRota(name: String): Action[AnyContent] =
     Action.async {
-      rotasService.retrieve(id).map { result =>
+      rotasService.retrieve(name).map { result =>
         result match {
           case Some(rotaWithUsers) => Ok(Json.toJson(rotaWithUsers))
-          case None                => NotFound(notFoundErrorMessage(id, "rota"))
+          case None                => NotFound(notFoundErrorMessage(name, "rota"))
         }
       }
     }
 
   /** Handles request for updating a rota's details
     */
-  def updateRota(id: Int): Action[JsValue] =
+  def updateRota(name: String): Action[JsValue] =
     Action.async(parse.json) { request =>
       request.body
         .validate[UpdateRotaDTO]
@@ -79,15 +79,14 @@ class Application @Inject() (
           rota => {
             rotasService
               .update(
-                id = id,
-                name = rota.name,
+                name = name,
                 description = rota.description,
                 assigned = rota.assigned
               )
               .map { updated =>
                 updated match {
                   case Some(rota) => Ok(request.body)
-                  case None       => NotFound(notFoundErrorMessage(id, "rota"))
+                  case None       => NotFound(notFoundErrorMessage(name, "rota"))
                 }
               }
           }
@@ -96,11 +95,11 @@ class Application @Inject() (
 
   /** Handles request for deleting a rota
     */
-  def deleteRota(id: Int): Action[AnyContent] =
+  def deleteRota(name: String): Action[AnyContent] =
     Action.async {
-      rotasService.delete(id).map { result =>
+      rotasService.delete(name).map { result =>
         result match {
-          case 0 => NotFound(notFoundErrorMessage(id, "rota"))
+          case 0 => NotFound(notFoundErrorMessage(name, "rota"))
           case _ => Ok
         }
       }
@@ -108,7 +107,7 @@ class Application @Inject() (
 
   /** Handles request for updating the users in a rota
     */
-  def addUsersToRota(id: Int): Action[JsValue] =
+  def addUsersToRota(name: String): Action[JsValue] =
     Action.async(parse.json) { request =>
       request.body
         .validate[AddUsersToRotaDTO]
@@ -120,8 +119,8 @@ class Application @Inject() (
           usersToAdd => {
             for {
               users <- usersService.createUsersIfNeeded(usersToAdd.users)
-              _ <- rotasService.addUsersToRota(id, users)
-              rota <- rotasService.retrieve(id)
+              _ <- rotasService.addUsersToRota(name, users)
+              rota <- rotasService.retrieve(name)
             } yield {
               Ok(Json.toJson(rota))
             }
@@ -129,11 +128,11 @@ class Application @Inject() (
         )
     }
 
-  def rotateRota(id: Int): Action[AnyContent] =
+  def rotateRota(name: String): Action[AnyContent] =
     Action.async {
       for {
-        _ <- rotasService.rotate(id)
-        updated <- rotasService.retrieve(id)
+        _ <- rotasService.rotate(name)
+        updated <- rotasService.retrieve(name)
       } yield {
         Ok(Json.toJson(updated))
       }
@@ -149,9 +148,9 @@ class Application @Inject() (
     )
   }
 
-  private def notFoundErrorMessage(id: Int, resource: String): JsObject =
+  private def notFoundErrorMessage(name: String, resource: String): JsObject =
     Json.obj(
-      "message" -> messagesApi("error.resourceNotFound", resource, id)
+      "message" -> messagesApi("error.resourceNotFound", resource, name)
     )
 
 }

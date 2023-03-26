@@ -35,17 +35,17 @@ class RotasService @Inject() (
 
   /** Retrieve a rota
     *
-    * @param id
-    *   the ID of the rota to retrieve
+    * @param name
+    *   the name of the rota to retrieve
     * @return
     *   the requested rota with its assigned user and all unassigned users
     */
-  def retrieve(id: Int): Future[Option[RotaWithUsers]] = {
-    rotasRepository.retrieve(id).flatMap { rota =>
+  def retrieve(name: String): Future[Option[RotaWithUsers]] = {
+    rotasRepository.retrieve(name).flatMap { rota =>
       rota match {
         case Some(rota) =>
           for {
-            rotaUsers <- rotaUsersRepository.retrieveRotaUsersWithRotaID(id)
+            rotaUsers <- rotaUsersRepository.retrieveRotaUsersInRota(rota.name)
             users <- usersRepository.retrieveList(rotaUsers.map(_.userID))
             assigned <- rota.assigned
               .map(usersRepository.retrieve)
@@ -61,10 +61,8 @@ class RotasService @Inject() (
 
   /** Update a rota's details
     *
-    * @param id
-    *   the ID of the rota to update
     * @param name
-    *   the new name for the rota, if given
+    *   the name of the rota to update
     * @param description
     *   the new description for the rota, if given
     * @param assigned
@@ -73,27 +71,26 @@ class RotasService @Inject() (
     *   the updated rota, if it was found
     */
   def update(
-      id: Int,
-      name: Option[String] = None,
+      name: String,
       description: Option[String] = None,
       assigned: Option[Int] = None
   ): Future[Option[Rota]] = {
-    rotasRepository.update(id, name, description, assigned)
+    rotasRepository.update(name, description, assigned)
   }
 
   /** Delete a rota
     *
-    * This will also delete all RotaUsers associated with the Rota
+    * This will also delete all users associated with the rota
     *
-    * @param id
-    *   the ID of the rota to get
+    * @param name
+    *   the name of the rota to delete
     * @return
     *   the number of rotas deleted
     */
-  def delete(id: Int): Future[Int] = {
+  def delete(name: String): Future[Int] = {
     for {
-      _ <- rotaUsersRepository.deleteRotaUsersWithRotaID(id)
-      deletedRotas <- rotasRepository.delete(id)
+      _ <- rotaUsersRepository.deleteRotaUsersInRota(name)
+      deletedRotas <- rotasRepository.delete(name)
     } yield {
       deletedRotas
     }
@@ -101,28 +98,28 @@ class RotasService @Inject() (
 
   /** Add users to a rota
     *
-    * @param rotaID
-    *   the ID of the rota to add to
+    * @param rotaName
+    *   the name of the rota to add to
     * @return
     *   the rota users that were inserted
     */
-  def addUsersToRota(rotaID: Int, users: Seq[User]): Future[Seq[RotaUser]] = {
-    val rotaUsers = users.map(user => RotaUser(rotaID, user.id))
+  def addUsersToRota(rotaName: String, users: Seq[User]): Future[Seq[RotaUser]] = {
+    val rotaUsers = users.map(user => RotaUser(rotaName, user.id))
     rotaUsersRepository.createRotaUsers(rotaUsers)
     Future.successful(rotaUsers)
   }
 
   /** Rotate a rota's assigned user
     *
-    * @param rotaID
-    *   the ID of the rota to rotate
+    * @param rotaName
+    *   the name of the rota to rotate
     * @return
     *   the updated rota
     */
-  def rotate(rotaID: Int): Future[Option[Rota]] = {
+  def rotate(rotaName: String): Future[Option[Rota]] = {
     for {
-      rota <- rotasRepository.retrieve(rotaID)
-      rotaUsers <- rotaUsersRepository.retrieveRotaUsersWithRotaID(rotaID)
+      rota <- rotasRepository.retrieve(rotaName)
+      rotaUsers <- rotaUsersRepository.retrieveRotaUsersInRota(rotaName)
       updatedRota <- rota match {
         case Some(rota) =>
           val newAssigned = rota.assigned match {
@@ -133,7 +130,7 @@ class RotasService @Inject() (
             case None =>
               Some(rotaUsers.head)
           }
-          rotasRepository.update(rotaID, None, None, assigned = newAssigned.map(_.userID))
+          rotasRepository.update(rotaName, None, assigned = newAssigned.map(_.userID))
         case None =>
           Future.successful(None)
       }

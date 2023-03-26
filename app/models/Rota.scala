@@ -3,8 +3,7 @@ package models
 case class Rota(
     name: String,
     description: Option[String] = None,
-    assigned: Option[Int] = None,
-    id: Option[Int] = None
+    assigned: Option[Int] = None
 )
 
 object Rota {
@@ -25,9 +24,8 @@ object Rota {
       )
 
     val assigned = (JsPath \ "assigned").readNullable[Int]
-    val id = (JsPath \ "id").readNullable[Int]
 
-    (name and description and assigned and id)(Rota.apply _)
+    (name and description and assigned)(Rota.apply _)
   }
 
   implicit val rotaWrites = new Writes[Rota] {
