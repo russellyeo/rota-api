@@ -1,7 +1,6 @@
 # --- !Ups
 CREATE TABLE "ROTAS" (
-    "ID" SERIAL PRIMARY KEY, 
-    "NAME" varchar(255) NOT NULL, 
+    "NAME" varchar(255) PRIMARY KEY, 
     "DESCRIPTION" varchar(255), 
     "ASSIGNED_USER_ID" int
 );
