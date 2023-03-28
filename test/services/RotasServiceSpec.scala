@@ -130,6 +130,82 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 
+  "addUsersToRota" should {
+    "add users to a rota" in new WithRotasService() {
+      // GIVEN a rota
+      val rota = Rota("retrospective", None, Some(1))
+      // AND some users to be added to the rota
+      val users = Seq(
+        User("@Helena", 1),
+        User("@Bruno", 2),
+        User("@David", 3),
+        User("@Alexis", 4)
+      )
+      // AND the rotas repository returns no rota users for the rota
+      when(
+        mockRotaUsersRepository.retrieveRotaUsersInRota("retrospective")
+      ).thenReturn(
+        Future.successful(Seq.empty)
+      )
+      // AND the rota users repository will sucessfully create the rota users
+      val rotaUsers = Seq(
+        RotaUser("retrospective", 1),
+        RotaUser("retrospective", 2),
+        RotaUser("retrospective", 3),
+        RotaUser("retrospective", 4)
+      )
+      doNothing().when(mockRotaUsersRepository).createRotaUsers(rotaUsers)
+
+      // WHEN we update the rota
+      val result = rotasService.addUsersToRota(
+        rotaName = "retrospective",
+        users = users
+      )
+
+      // THEN the created rota users are returned
+      await(result) mustBe rotaUsers
+      verify(mockRotaUsersRepository, times(1)).createRotaUsers(rotaUsers)
+    }
+
+    "not add users to a rota if they are already on it" in new WithRotasService() {
+      // GIVEN a rota
+      val rota = Rota("retrospective", None, Some(1))
+      // AND some users to be added to the rota
+      val users = Seq(
+        User("@Helena", 1),
+        User("@Bruno", 2),
+        User("@David", 3),
+        User("@Alexis", 4)
+      )
+      // AND the rota already has some existing rota users
+      val existingRotaUsers = Seq(
+        RotaUser("retrospective", 1),
+        RotaUser("retrospective", 2)
+      )
+      when(
+        mockRotaUsersRepository.retrieveRotaUsersInRota("retrospective")
+      ).thenReturn(
+        Future.successful(existingRotaUsers)
+      )
+      // AND the rota users repository will successfully insert the new rota users
+      val newRotaUsers = Seq(
+        RotaUser("retrospective", 3),
+        RotaUser("retrospective", 4)
+      )
+      doNothing().when(mockRotaUsersRepository).createRotaUsers(newRotaUsers)
+
+      // WHEN we update the rota
+      val result = rotasService.addUsersToRota(
+        rotaName = "retrospective",
+        users = users
+      )
+
+      // THEN only the new rota users were added
+      await(result) mustBe newRotaUsers
+      verify(mockRotaUsersRepository, times(1)).createRotaUsers(newRotaUsers)
+    }
+  }
+
   "delete" should {
     "delete RotaUsers and then Rota" in new WithRotasService() {
       // GIVEN the RotaUsersRepository will delete 8 RotaUsers

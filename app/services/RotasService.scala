@@ -98,6 +98,8 @@ class RotasService @Inject() (
 
   /** Add users to a rota
     *
+    * This will not add users that are already in the rota
+    *
     * @param rotaName
     *   the name of the rota to add to
     * @return
@@ -105,8 +107,21 @@ class RotasService @Inject() (
     */
   def addUsersToRota(rotaName: String, users: Seq[User]): Future[Seq[RotaUser]] = {
     val rotaUsers = users.map(user => RotaUser(rotaName, user.id))
-    rotaUsersRepository.createRotaUsers(rotaUsers)
-    Future.successful(rotaUsers)
+    val rotaUsersToInsert = for {
+      existingRotaUsers <- rotaUsersRepository.retrieveRotaUsersInRota(rotaName)
+      rotaUsersToInsert = rotaUsers.filterNot(rotaUser =>
+        existingRotaUsers.exists(existingRotaUser => existingRotaUser.userID == rotaUser.userID)
+      )
+    } yield {
+      rotaUsersToInsert
+    }
+    rotaUsersToInsert.flatMap {
+      case rotaUsersToInsert if rotaUsersToInsert.nonEmpty =>
+        rotaUsersRepository.createRotaUsers(rotaUsersToInsert)
+        Future.successful(rotaUsersToInsert)
+      case _ =>
+        Future.successful(Seq.empty)
+    }
   }
 
   /** Rotate a rota's assigned user
