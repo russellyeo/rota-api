@@ -1,6 +1,6 @@
 # Rota API
 
-This API provides CRUD (Create, Read, Update, Delete) functionality for managing team rotas. It allows users to create, view, update, and delete rotas for your team.
+A simple rota management application, written in Scala.
 
 ## Installation (macOS)
 
