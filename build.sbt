@@ -20,10 +20,6 @@ libraryDependencies ++= Seq(
 )
 
 Test / javaOptions += "-Dconfig.file=conf/test.conf"
-// Fixes an issue where failed tests pump out numerous "java.net.SocketException: Broken pipe (Write failed)" errors
-// Not sure if this is correct, but it improves testing experience
-// Note that javaOptions is ignored when this is set to false
-Test / fork := false
 
 dockerBaseImage := "openjdk:11-jre-slim"
 dockerUpdateLatest := true
