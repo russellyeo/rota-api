@@ -49,6 +49,34 @@ class UsersServiceSpec extends PlaySpec with GuiceOneAppPerTest {
       verify(mockUsersRepository, never()).insert(any[User])
     }
   }
+
+  "getUserByName" should {
+    "get a user if it exists" in new WithUsersService() {
+      // GIVEN the user exists
+      val user = User("@Dave", 0)
+      when(mockUsersRepository.retrieve("@Dave"))
+        .thenReturn(Future.successful(Some(user)))
+
+      // WHEN we call createUserIfNeeded
+      val result = rotasService.getUserByName("@Dave")
+
+      // THEN the newly created user is returned
+      await(result) mustBe Some(user)
+    }
+
+    "return none if the user does not exsit" in new WithUsersService() {
+      // GIVEN the user exists
+      val user = User("@Dave", 0)
+      when(mockUsersRepository.retrieve("@Dave"))
+        .thenReturn(Future.successful(None))
+
+      // WHEN we call createUserIfNeeded
+      val result = rotasService.getUserByName("@Dave")
+
+      // THEN the newly created user is returned
+      await(result) mustBe None
+    }
+  }
 }
 
 trait WithUsersService extends WithApplication with MockitoSugar {

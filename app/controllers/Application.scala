@@ -138,6 +138,22 @@ class Application @Inject() (
       }
     }
 
+  def getUserByName(name: String): Action[AnyContent] =
+    Action.async {
+      usersService.getUserByName(name).flatMap { result =>
+        val response = result match {
+          case Some(user) => Ok(Json.toJson(user))
+          case _ =>
+            NotFound(
+              Json.obj(
+                "message" -> s"User $name was not found"
+              )
+            )
+        }
+        Future.successful(response)
+      }
+    }
+
   private def validationErrorMessage(
       errors: Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
   ): JsObject = {

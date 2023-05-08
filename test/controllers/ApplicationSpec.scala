@@ -423,6 +423,26 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     }
   }
 
+  "GET /users/by-name/:name" should {
+    "get a user by name" in new WithSUT() {
+      // GIVEN the user exists
+      val user = User("@Mohammed", 2)
+      when(mockUsersService.getUserByName("@Mohammed"))
+        .thenReturn(Future.successful(Some(user)))
+
+      // WHEN the request is made
+      val request = FakeRequest(GET, "/users/by-name/%40Mohammed")
+      val result = application.getUserByName("@Mohammed").apply(request)
+
+      // THEN
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj(
+        "name" -> "@Mohammed",
+        "id" -> 2
+      )
+    }
+  }
+
 }
 
 trait WithSUT extends WithApplication with MockitoSugar {

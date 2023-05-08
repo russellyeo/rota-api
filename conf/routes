@@ -9,9 +9,10 @@ GET     /rotas/:name                controllers.Application.retrieveRota(name: S
 POST    /rotas                      controllers.Application.createRota()
 PATCH   /rotas/:name                controllers.Application.updateRota(name: String)
 DELETE  /rotas/:name                controllers.Application.deleteRota(name: String)
+GET     /rotas/:name/rotate         controllers.Application.rotateRota(name: String)
 
-# Rota's Users
+# Rota Users
 POST    /rotas/:name/users          controllers.Application.addUsersToRota(name: String)
 
-# Rotate
-GET     /rotas/:name/rotate         controllers.Application.rotateRota(name: String)
+# Users
+GET     /users/by-name/:name        controllers.Application.getUserByName(name: String)

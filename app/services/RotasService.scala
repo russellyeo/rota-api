@@ -7,11 +7,14 @@ import models.{Rota, RotaUser, RotaWithUsers, User}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import play.api.Logging
+
 class RotasService @Inject() (
     rotasRepository: RotasRepository,
     usersRepository: UsersRepository,
     rotaUsersRepository: RotaUsersRepository
-)(implicit executionContext: ExecutionContext) {
+)(implicit executionContext: ExecutionContext)
+    extends Logging {
 
   /** Retrieve all rotas
     *
@@ -117,6 +120,7 @@ class RotasService @Inject() (
     }
     rotaUsersToInsert.flatMap {
       case rotaUsersToInsert if rotaUsersToInsert.nonEmpty =>
+        logger.debug(s"rotaUsersToInsert=$rotaUsersToInsert")
         rotaUsersRepository.createRotaUsers(rotaUsersToInsert)
         Future.successful(rotaUsersToInsert)
       case _ =>

@@ -12,6 +12,17 @@ class UsersService @Inject() (
     rotaUsersRepository: RotaUsersRepository
 )(implicit executionContext: ExecutionContext) {
 
+  /** Get a user by name
+    *
+    * @param name
+    *   the name of the user
+    * @return
+    *   the user if it exists
+    */
+  def getUserByName(name: String): Future[Option[User]] = {
+    usersRepository.retrieve(name)
+  }
+
   /** Create a new user if needed
     *
     * @param name
