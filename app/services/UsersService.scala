@@ -38,7 +38,6 @@ class UsersService @Inject() (
         case None =>
           val user = User(name)
           usersRepository.insert(user)
-          Future.successful(user)
       }
     }
   }

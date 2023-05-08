@@ -20,18 +20,19 @@ class UsersServiceSpec extends PlaySpec with GuiceOneAppPerTest {
   "createUserIfNeeded" should {
     "create a user if it does not exist" in new WithUsersService() {
       // GIVEN the user does not exist
-      val user = User("Richard", 0)
-      when(mockUsersRepository.retrieve("Richard"))
+      val user = User("@Richard", 0)
+      val inserted = User("@Richard", 42)
+      when(mockUsersRepository.retrieve("@Richard"))
         .thenReturn(Future.successful(None))
-      // AND will be successfully inserted
+      // AND will be successfully inserted with an ID
       when(mockUsersRepository.insert(user))
-        .thenReturn(Future.successful(user))
+        .thenReturn(Future.successful(inserted))
 
       // WHEN we call createUserIfNeeded
-      val result = rotasService.createUserIfNeeded("Richard")
+      val result = rotasService.createUserIfNeeded("@Richard")
 
       // THEN the newly created user is returned
-      await(result) mustBe user
+      await(result) mustBe inserted
     }
 
     "return a user if they already exist" in new WithUsersService() {
@@ -53,7 +54,7 @@ class UsersServiceSpec extends PlaySpec with GuiceOneAppPerTest {
   "getUserByName" should {
     "get a user if it exists" in new WithUsersService() {
       // GIVEN the user exists
-      val user = User("@Dave", 0)
+      val user = User("@Dave", 23)
       when(mockUsersRepository.retrieve("@Dave"))
         .thenReturn(Future.successful(Some(user)))
 
@@ -66,7 +67,7 @@ class UsersServiceSpec extends PlaySpec with GuiceOneAppPerTest {
 
     "return none if the user does not exsit" in new WithUsersService() {
       // GIVEN the user exists
-      val user = User("@Dave", 0)
+      val user = User("@Dave", 23)
       when(mockUsersRepository.retrieve("@Dave"))
         .thenReturn(Future.successful(None))
 
