@@ -36,6 +36,17 @@ class RotasService @Inject() (
     rotasRepository.insert(rota)
   }
 
+  /** Retrieve a rota's description
+    *
+    * @param rotaName
+    *   the name of the rota to retrieve
+    * @return
+    *   the requested rota description if it exists
+    */
+  def retrieveRotaDescription(rotaName: String): Future[Option[Rota]] = {
+    rotasRepository.retrieve(rotaName)
+  }
+
   /** Retrieve a rota
     *
     * @param name
@@ -157,5 +168,14 @@ class RotasService @Inject() (
       updatedRota
     }
   }
+
+  /** Delete a user from a rota
+    *
+    * @param rota
+    *   the rota to delete from
+    * @param user
+    *   the user to delete
+    */
+  def deleteUserFromRota(rota: Rota, user: User): Future[Unit] = ???
 
 }

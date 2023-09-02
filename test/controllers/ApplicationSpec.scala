@@ -443,6 +443,80 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
     }
   }
 
+  "DELETE  /rotas/:name/users/:name" should {
+    "delete a user from a rota" in new WithSUT() {
+      // GIVEN a rota with an assigned user
+      val rota = Rota(
+        name = "retrospective",
+        description = Some("Reflect on the previous sprint"),
+        assigned = Some(1)
+      )
+      val maria = User("@Maria", 1)
+      val mohammed = User("@Mohammed", 2)
+      val beatrice = User("@Beatrice", 3)
+
+      when(mockRotasService.retrieveRotaDescription("retrospective"))
+        .thenReturn(Future.successful(Some(rota)))
+
+      when(mockUsersService.getUserByName("@Mohammed"))
+        .thenReturn(Future.successful(Some(mohammed)))
+
+      when(mockRotasService.deleteUserFromRota(rota, mohammed))
+        .thenReturn(Future.successful(()))
+
+      // WHEN the request is made
+      val request = FakeRequest(DELETE, "/rotas/retrospective/users/%40Mohammed")
+      val result = application.deleteUserFromRota("retrospective", "@Mohammed").apply(request)
+
+      // THEN
+      status(result) mustBe NO_CONTENT
+    }
+
+    "fail if the rota does not exist" in new WithSUT() {
+      // GIVEN
+      when(mockRotasService.retrieveRotaDescription("retrospective"))
+        .thenReturn(Future.successful(None))
+
+      val user = User("@Mohammed", 2)
+      when(mockUsersService.getUserByName("@Mohammed"))
+        .thenReturn(Future.successful(Some(user)))
+
+      // WHEN
+      val request = FakeRequest(DELETE, "/rotas/retrospective/users/%40Mohammed")
+      val result = application.deleteUserFromRota("retrospective", "@Mohammed").apply(request)
+
+      // THEN
+      status(result) mustBe NOT_FOUND
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "Rota with name `retrospective` not found"
+      )
+    }
+
+    "fail if the user does not exist" in new WithSUT() {
+      // GIVEN
+      val rota = Rota(
+        name = "retrospective",
+        description = Some("Reflect on the previous sprint"),
+        assigned = Some(1)
+      )
+      when(mockRotasService.retrieveRotaDescription("retrospective"))
+        .thenReturn(Future.successful(Some(rota)))
+
+      when(mockUsersService.getUserByName("@Mohammed"))
+        .thenReturn(Future.successful(None))
+
+      // WHEN
+      val request = FakeRequest(DELETE, "/rotas/retrospective/users/%40Mohammed")
+      val result = application.deleteUserFromRota("retrospective", "@Mohammed").apply(request)
+
+      // THEN
+      status(result) mustBe NOT_FOUND
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "User with name `@Mohammed` not found"
+      )
+    }
+  }
+
 }
 
 trait WithSUT extends WithApplication with MockitoSugar {

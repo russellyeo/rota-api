@@ -13,6 +13,7 @@ GET     /rotas/:name/rotate         controllers.Application.rotateRota(name: Str
 
 # Rota Users
 POST    /rotas/:name/users          controllers.Application.addUsersToRota(name: String)
+DELETE  /rotas/:name/users/:name    controllers.Application.deleteUserFromRota(rotaName: String, userName: String)
 
 # Users
 GET     /users/by-name/:name        controllers.Application.getUserByName(name: String)
