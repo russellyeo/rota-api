@@ -128,6 +128,43 @@ class Application @Inject() (
         )
     }
 
+  /** Delete a user from a rota
+    *
+    * @param rotaName
+    *   the name of the rota to delete from
+    * @param userName
+    *   the name of the user to delete
+    * @return
+    *   204 No Content if the user was deleted, 404 Not Found if the rota or user was not found
+    */
+  def deleteUserFromRota(rotaName: String, userName: String): Action[AnyContent] =
+    Action.async {
+      for {
+        maybeRota <- rotasService.retrieveRotaDescription(rotaName)
+        maybeUser <- usersService.getUserByName(userName)
+        result <- (maybeRota, maybeUser) match {
+          case (Some(rota), Some(user)) =>
+            rotasService.deleteUserFromRota(rota, user).map(_ => NoContent)
+          case (None, _) =>
+            Future.successful(
+              NotFound(
+                Json.obj(
+                  "message" -> s"Rota with name `$rotaName` not found"
+                )
+              )
+            )
+          case (_, None) =>
+            Future.successful(
+              NotFound(
+                Json.obj(
+                  "message" -> s"User with name `$userName` not found"
+                )
+              )
+            )
+        }
+      } yield result
+    }
+
   def rotateRota(name: String): Action[AnyContent] =
     Action.async {
       for {

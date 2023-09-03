@@ -209,7 +209,7 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
   "delete" should {
     "delete RotaUsers and then Rota" in new WithRotasService() {
       // GIVEN the RotaUsersRepository will delete 8 RotaUsers
-      when(mockRotaUsersRepository.deleteRotaUsersInRota("standup"))
+      when(mockRotaUsersRepository.deleteAllRotaUsersFromRota("standup"))
         .thenReturn(Future.successful(8))
       // AND the RotasRepository will delete a Rota
       when(mockRotasRepository.delete("standup"))
@@ -220,7 +220,7 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
 
       // THEN the RotaUsers and Rota will be deleted
       await(result) mustBe 1
-      verify(mockRotaUsersRepository).deleteRotaUsersInRota("standup")
+      verify(mockRotaUsersRepository).deleteAllRotaUsersFromRota("standup")
       verify(mockRotasRepository).delete("standup")
     }
   }
@@ -256,6 +256,68 @@ class RotasServiceSpec extends PlaySpec with GuiceOneAppPerTest {
 
       // THEN Bob is the new assigned user
       await(result) mustBe Some(Rota(name = "retrospective", assigned = Some(3)))
+    }
+  }
+
+  "deleteUserFromRota" should {
+    "delete a non-assigned user from a rota" in new WithRotasService() {
+      // GIVEN
+      val rota = Rota(name = "retrospective", assigned = Some(1))
+      val user = User(name = "@Emma", id = 2)
+
+      when(mockRotaUsersRepository.deleteRotaUser("retrospective", 2))
+        .thenReturn(Future.successful(1))
+
+      when(mockRotasRepository.retrieve("retrospective"))
+        .thenReturn(Future.successful(Some(rota)))
+
+      // WHEN
+      val result = rotasService.deleteUserFromRota(rota, user)
+
+      // THEN
+      await(result) mustBe Some(rota)
+      verify(mockRotaUsersRepository).deleteRotaUser("retrospective", 2)
+      verify(mockRotasRepository).retrieve("retrospective")
+    }
+
+    "delete an assigned user from a rota and rotate the rota" in new WithRotasService() {
+      // GIVEN some data
+      val rota = Rota(name = "retrospective", assigned = Some(1))
+      val updatedRota = Rota(name = "retrospective", assigned = Some(2))
+
+      val user1 = User(name = "@David", id = 1)
+      val user2 = User(name = "@Anna", id = 2)
+      val user3 = User(name = "@Mo", id = 3)
+
+      val rotaUser1 = RotaUser(rotaName = "retrospective", userID = 1)
+      val rotaUser2 = RotaUser(rotaName = "retrospective", userID = 2)
+      val rotaUser3 = RotaUser(rotaName = "retrospective", userID = 3)
+
+      // AND the rota users repository will successfully delete the user
+      when(mockRotaUsersRepository.deleteRotaUser("retrospective", 1))
+        .thenReturn(Future.successful(1))
+
+      // AND the rota will be successfully retrieved
+      when(mockRotasRepository.retrieve("retrospective"))
+        .thenReturn(Future.successful(Some(rota)))
+
+      // AND the updated rota users will be successfully retrieved
+      when(mockRotaUsersRepository.retrieveRotaUsersInRota("retrospective"))
+        .thenReturn(Future.successful(Seq(rotaUser2, rotaUser3)))
+
+      // AND the assigned user will be successfully updated
+      when(mockRotasRepository.update("retrospective", None, assigned = Some(2)))
+        .thenReturn(Future.successful(Some(updatedRota)))
+
+      // WHEN we delete a user from the rota
+      val result = rotasService.deleteUserFromRota(rota, user1)
+
+      // THEN the user is deleted and the rota is rotated
+      await(result) mustBe Some(updatedRota)
+      verify(mockRotaUsersRepository).deleteRotaUser("retrospective", 1)
+      verify(mockRotasRepository, times(2)).retrieve("retrospective")
+      verify(mockRotaUsersRepository).retrieveRotaUsersInRota("retrospective")
+      verify(mockRotasRepository).update("retrospective", None, assigned = Some(2))
     }
   }
 

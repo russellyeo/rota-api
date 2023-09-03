@@ -36,6 +36,17 @@ class RotasService @Inject() (
     rotasRepository.insert(rota)
   }
 
+  /** Retrieve a rota's description
+    *
+    * @param rotaName
+    *   the name of the rota to retrieve
+    * @return
+    *   the requested rota description if it exists
+    */
+  def retrieveRotaDescription(rotaName: String): Future[Option[Rota]] = {
+    rotasRepository.retrieve(rotaName)
+  }
+
   /** Retrieve a rota
     *
     * @param name
@@ -92,7 +103,7 @@ class RotasService @Inject() (
     */
   def delete(name: String): Future[Int] = {
     for {
-      _ <- rotaUsersRepository.deleteRotaUsersInRota(name)
+      _ <- rotaUsersRepository.deleteAllRotaUsersFromRota(name)
       deletedRotas <- rotasRepository.delete(name)
     } yield {
       deletedRotas
@@ -155,6 +166,32 @@ class RotasService @Inject() (
       }
     } yield {
       updatedRota
+    }
+  }
+
+  /** Delete a user from a rota
+    *
+    * This will also rotate the rota if the deleted user is the currently assigned user
+    *
+    * @param rota
+    *   the rota to delete from
+    * @param user
+    *   the user to delete
+    * @return
+    *   the updated rota if the operation was successful
+    */
+  def deleteUserFromRota(rota: Rota, user: User): Future[Option[Rota]] = {
+    rotaUsersRepository.deleteRotaUser(rota.name, user.id).flatMap { _ =>
+      rotasRepository.retrieve(rota.name).flatMap {
+        case Some(rota) =>
+          if (rota.assigned.contains(user.id)) {
+            rotate(rota.name)
+          } else {
+            Future.successful(Some(rota))
+          }
+        case None =>
+          Future.successful(None)
+      }
     }
   }
 
