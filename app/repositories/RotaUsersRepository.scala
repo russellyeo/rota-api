@@ -57,10 +57,21 @@ class RotaUsersRepository @Inject() (
     * @param rotaName
     *   the name of the rota to retreive
     * @return
-    *   the requested rota users
+    *   the number of rota users deleted
     */
-  def deleteRotaUsersInRota(rotaName: String): Future[Int] =
+  def deleteAllRotaUsersFromRota(rotaName: String): Future[Int] =
     db.run(rotaUsers.filter(_.rotaName === rotaName).delete)
+
+  /** Delete a rota user from a rota
+    *
+    * @param rotaName
+    *   the name of the rota
+    * @param userID
+    *   the userID to delete
+    * @return
+    *   the number of rota users deleted
+    */
+  def deleteRotaUser(rotaName: String, userID: Int): Future[Int] = ???
 
 }
 

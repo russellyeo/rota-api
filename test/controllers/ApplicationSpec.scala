@@ -462,7 +462,7 @@ class ApplicationSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
         .thenReturn(Future.successful(Some(mohammed)))
 
       when(mockRotasService.deleteUserFromRota(rota, mohammed))
-        .thenReturn(Future.successful(()))
+        .thenReturn(Future.successful(Some(rota)))
 
       // WHEN the request is made
       val request = FakeRequest(DELETE, "/rotas/retrospective/users/%40Mohammed")
