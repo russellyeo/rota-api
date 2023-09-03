@@ -4,16 +4,16 @@
 # ~~~~
 
 # Rotas
-GET     /rotas                      controllers.Application.listRotas()
-GET     /rotas/:name                controllers.Application.retrieveRota(name: String)
-POST    /rotas                      controllers.Application.createRota()
-PATCH   /rotas/:name                controllers.Application.updateRota(name: String)
-DELETE  /rotas/:name                controllers.Application.deleteRota(name: String)
-GET     /rotas/:name/rotate         controllers.Application.rotateRota(name: String)
+GET     /rotas                            controllers.Application.listRotas()
+GET     /rotas/:name                      controllers.Application.retrieveRota(name: String)
+POST    /rotas                            controllers.Application.createRota()
+PATCH   /rotas/:name                      controllers.Application.updateRota(name: String)
+DELETE  /rotas/:name                      controllers.Application.deleteRota(name: String)
+GET     /rotas/:name/rotate               controllers.Application.rotateRota(name: String)
 
 # Rota Users
-POST    /rotas/:name/users          controllers.Application.addUsersToRota(name: String)
-DELETE  /rotas/:name/users/:name    controllers.Application.deleteUserFromRota(rotaName: String, userName: String)
+POST    /rotas/:name/users                controllers.Application.addUsersToRota(name: String)
+DELETE  /rotas/:rotaName/users/:userName  controllers.Application.deleteUserFromRota(rotaName: String, userName: String)
 
 # Users
-GET     /users/by-name/:name        controllers.Application.getUserByName(name: String)
+GET     /users/by-name/:name              controllers.Application.getUserByName(name: String)
