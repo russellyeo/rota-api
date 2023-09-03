@@ -71,8 +71,12 @@ class RotaUsersRepository @Inject() (
     * @return
     *   the number of rota users deleted
     */
-  def deleteRotaUser(rotaName: String, userID: Int): Future[Int] = ???
-
+  def deleteRotaUser(rotaName: String, userID: Int): Future[Int] =
+    db.run(
+      rotaUsers
+        .filter(rotaUser => rotaUser.rotaName === rotaName && rotaUser.userID === userID)
+        .delete
+    )
 }
 
 trait RotaUsersComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
