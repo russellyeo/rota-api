@@ -24,6 +24,11 @@ The API should now be running on `http://localhost:3000`
 sbt test
 ```
 
+## Deploy
+```
+sbt packageApplication && fly deploy
+```
+
 ## Authentication
 
 This API does not currently support authentication or authorization.
