@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy_database_migrations:
-    name: Deploy database migrations to supabase
+    name: Deploy database migrations to Supabase
     runs-on: ubuntu-latest
     concurrency: deploy-group
     env:
@@ -24,12 +24,31 @@ jobs:
       - run: supabase db push
   
   deploy_application:
-    name: Deploy application to fly.io
+    name: Deploy application to Fly.io
     runs-on: ubuntu-latest
     concurrency: deploy-group
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only --config fly.staging.toml
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+      
+      - name: Install Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Build and test
+        shell: bash
+        run: sbt -v test
+      
+      - name: Build Docker image
+        shell: bash
+        run: sbt -v packageApplication
+      
+      - name: Deploy to Fly
+        run: flyctl deploy --remote-only --config fly.staging.toml
