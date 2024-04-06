@@ -25,6 +25,7 @@ jobs:
   
   deploy_application:
     name: Deploy application to Fly.io
+    needs: deploy_database_migrations
     runs-on: ubuntu-latest
     concurrency: deploy-group
     env:
