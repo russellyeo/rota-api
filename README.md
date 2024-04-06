@@ -6,13 +6,13 @@ A simple rota management application, written in Scala.
 
 1. Install Scala and SBT
 
-```sh
+```shell
 brew install coursier/formulas/coursier && cs setup && brew install sbt
 ```
 
 2. Install dependencies and start the local server:
 
-```sh
+```shell
 sbt run
 ```
 
@@ -20,12 +20,14 @@ The API should now be running on `http://localhost:3000`
 
 ## Tests
 
-```sh
+```shell
 sbt test
 ```
 
 ## Deploy
-```
+The application is packaged into a fat JAR using sbt-assembly, then a Docker image is built from this JAR and deployed to a fly.io instance using the fly CLI tool.
+
+```shell
 sbt packageApplication && fly deploy
 ```
 
