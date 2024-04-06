@@ -1,8 +1,8 @@
-name: Run tests on Pull Request
+name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
