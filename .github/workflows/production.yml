@@ -1,4 +1,4 @@
-name: Deploy Migrations to Production
+name: Deploy to production
 
 on:
   push:
@@ -20,12 +20,19 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up supabase CLI
+        uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase link --project-ref $SUPABASE_PROJECT_ID
-      - run: supabase db push
+      
+      - name: Link supabase CLI to project
+        run: supabase link --project-ref $SUPABASE_PROJECT_ID
+      
+      - name: Push migrations
+        run: supabase db push
   
   deploy_application:
     name: Deploy application to Fly.io
@@ -35,8 +42,9 @@ jobs:
     concurrency: deploy-group
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_CONFIG_FILE: fly.production.toml
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
       
       - name: Setup JDK
@@ -57,4 +65,4 @@ jobs:
         run: sbt -v packageApplication
       
       - name: Deploy to Fly
-        run: flyctl deploy --remote-only --config fly.production.toml
+        run: flyctl deploy --remote-only --config $FLY_CONFIG_FILE
