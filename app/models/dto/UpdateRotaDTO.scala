@@ -1,12 +1,12 @@
 package models.dto
 
-case class UpdateRotaDTO(
+final case class UpdateRotaDTO(
     name: Option[String] = None,
     description: Option[String] = None,
     assigned: Option[Int] = None
 )
 
-object UpdateRotaDTO {
+final object UpdateRotaDTO {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
   import play.api.data.validation._

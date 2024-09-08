@@ -1,11 +1,11 @@
-# Package the application and deploy to fly.io production instance
-deploy_production:
-	sbt packageApplication && fly deploy --config fly.production.toml
+# Start the supabase instance and run the application
+run:
+	supabase start
+	sbt run -jvm-debug 9999
 
-# Package the application and deploy to fly.io staging instance
-deploy_staging:
-	sbt packageApplication
-	fly deploy --config fly.staging.toml
+# Run tests
+test:
+	sbt test
 
 # Package the application, build and run as local docker containers
 deploy_local:
@@ -21,3 +21,12 @@ stop_local:
 	supabase stop
 	-docker stop rota-api-local && docker rm rota-api-local
 	-docker image rm rota-api-local
+
+# Package the application and deploy to fly.io staging instance
+deploy_staging:
+	sbt packageApplication
+	fly deploy --config fly.staging.toml
+
+# Package the application and deploy to fly.io production instance
+deploy_production:
+	sbt packageApplication && fly deploy --config fly.production.toml
