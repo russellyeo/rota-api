@@ -3,6 +3,11 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
+# Authentication
+GET     /api/v1/slack-installation/:id           controllers.SlackAuthenticationController.getInstallation(id: String)
+POST    /api/v1/slack-installation               controllers.SlackAuthenticationController.createInstallation()
+DELETE  /api/v1/slack-installation/:id           controllers.SlackAuthenticationController.deleteInstallation(id: String)
+
 # Rotas
 GET     /api/v1/rotas                            controllers.Application.listRotas()
 GET     /api/v1/rotas/:name                      controllers.Application.retrieveRota(name: String)
