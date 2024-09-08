@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11-alpine
+FROM openjdk:11-jre-slim
 
 COPY ./dist/app.jar /app/app.jar
 WORKDIR /app
