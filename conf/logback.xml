@@ -34,7 +34,12 @@
   <logger name="play" level="INFO" />
   <logger name="application" level="DEBUG" />
 
-  <root level="WARN">
+  <logger name="slick" level="DEBUG" />
+  <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG" />
+  <logger name="com.zaxxer.hikari" level="DEBUG" />
+  <logger name="play.db" level="DEBUG" />
+
+  <root level="INFO">
     <appender-ref ref="ASYNCFILE" />
     <appender-ref ref="ASYNCSTDOUT" />
   </root>
